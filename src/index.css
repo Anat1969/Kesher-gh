@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700;900&family=Heebo:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 230 60% 6%;
+    --foreground: 233 40% 90%;
+
+    --card: 232 50% 8%;
+    --card-foreground: 233 40% 90%;
+
+    --popover: 232 50% 8%;
+    --popover-foreground: 233 40% 90%;
+
+    --primary: 42 50% 54%;
+    --primary-foreground: 230 60% 6%;
+
+    --secondary: 232 40% 12%;
+    --secondary-foreground: 233 40% 90%;
+
+    --muted: 233 20% 44%;
+    --muted-foreground: 233 20% 60%;
+
+    --accent: 232 35% 16%;
+    --accent-foreground: 233 40% 90%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 225 40% 16%;
+    --input: 225 40% 16%;
+    --ring: 42 50% 54%;
+
+    --radius: 0.65rem;
+
+    /* Game-specific tokens */
+    --gold: 42 50% 54%;
+    --gold-light: 42 55% 69%;
+    --level-pshat: 217 91% 60%;
+    --level-remez: 271 81% 56%;
+    --level-drash: 25 95% 53%;
+    --level-sod: 48 97% 47%;
+    --chain: 142 71% 45%;
+
+    --surface-1: 232 50% 8%;
+    --surface-2: 232 42% 13%;
+    --surface-3: 232 35% 16%;
+    --border-subtle: 225 40% 80% / 0.08;
+    --border-medium: 225 40% 80% / 0.18;
+  }
+
+  .dark {
+    --background: 230 60% 6%;
+    --foreground: 233 40% 90%;
+    --card: 232 50% 8%;
+    --card-foreground: 233 40% 90%;
+    --popover: 232 50% 8%;
+    --popover-foreground: 233 40% 90%;
+    --primary: 42 50% 54%;
+    --primary-foreground: 230 60% 6%;
+    --secondary: 232 40% 12%;
+    --secondary-foreground: 233 40% 90%;
+    --muted: 233 20% 44%;
+    --muted-foreground: 233 20% 60%;
+    --accent: 232 35% 16%;
+    --accent-foreground: 233 40% 90%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 225 40% 16%;
+    --input: 225 40% 16%;
+    --ring: 42 50% 54%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Heebo', sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Frank Ruhl Libre', serif;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border-medium)); border-radius: 2px; }
+
+/* Animations */
+@keyframes eval-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes log-in {
+  from { opacity: 0; transform: translateX(5px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes score-float {
+  0% { opacity: 0; transform: translateY(0) scale(0.8); }
+  15% { opacity: 1; transform: translateY(-14px) scale(1.05); }
+  80% { opacity: 1; transform: translateY(-65px); }
+  100% { opacity: 0; transform: translateY(-90px) scale(0.9); }
+}
+@keyframes dup-flash {
+  50% { border-color: hsl(var(--destructive)); background: hsl(var(--destructive) / 0.09); }
+}
+@keyframes blink {
+  50% { opacity: 0.5; }
+}
+
+.animate-eval-in { animation: eval-in 0.3s ease; }
+.animate-log-in { animation: log-in 0.2s ease; }
+.animate-score-float { animation: score-float 1.3s ease forwards; }
+.animate-dup-flash { animation: dup-flash 0.4s ease; }
+.animate-blink { animation: blink 0.8s infinite; }
