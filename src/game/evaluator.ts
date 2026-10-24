@@ -7,10 +7,15 @@ export interface Evaluation {
   exp: string;
 }
 
+/** Order-independent key for a pair of card indices. */
+export function pairKey(a: number, b: number): string {
+  return [Math.min(a, b), Math.max(a, b)].join(',');
+}
+
 // ── HAND-CRAFTED SECRETS ──
 const SECRETS: Record<string, Evaluation> = {};
 function S(a: number, b: number, lv: Level, sub: string, exp: string) {
-  const k = [Math.min(a, b), Math.max(a, b)].join(',');
+  const k = pairKey(a, b);
   SECRETS[k] = { lv, sc: SCORE_VALUES[lv], sub, exp };
 }
 
@@ -55,6 +60,14 @@ S(5,24,'d','קשר מושגי — מלכים בממלכותם','דג ואריה 
 S(1,7,'r','קשר סמלי — יקר ויפה','ורד ויהלום — שניהם מסמלים אהבה ויוקרה, שניהם ניתנים כמתנת אהבה. אבל: הוורד נובל ומת; היהלום נצחי. מי מהם מייצג אהבה אמיתית יותר — הזמנית והחיה, או הנצחית והקרה?');
 S(2,18,'r','קשר סמלי — כנפיים שמסתירות','פרפר ומסכה — בטבע, דפוסי כנפי פרפרים הם מסכה אבולוציונית: עיניים מזויפות מפחידות טורפים. הפרפר "לובש מסכה" כדי לשרוד. שניהם מגלמים את פרדוקס ההישרדות: להיראות מה שאינך.');
 
+/** Keys of the hand-crafted "sod" pairs — the hidden secrets players can collect. */
+export const SECRET_KEYS: readonly string[] = Object.keys(SECRETS).filter(k => SECRETS[k].lv === 's');
+
+export function isHandCraftedSecret(a: number, b: number): boolean {
+  const s = SECRETS[pairKey(a, b)];
+  return !!s && s.lv === 's';
+}
+
 // ── TAG MAP ──
 interface TagEntry {
   lv: Level;
@@ -68,7 +81,7 @@ const TMAP: Record<string, TagEntry> = {
   reflection:{lv:'r',fn:(a,b)=>({sub:'קשר סמלי — שאול ומשאיל',exp:`${a.l} ו${b.l} שניהם עוסקים בהשתקפות — אחד פיזית ואחד רעיונית. שניהם מזכירים שמה שאנחנו רואים תמיד מסונן דרך משהו, אף פעם ישיר.`})},
   wave:      {lv:'d',fn:(a,b)=>({sub:'קשר מדעי — פיזיקת גלים',exp:`${a.l} ו${b.l} — שניהם גלים. הפיזיקה מגלה שגל מים, גל קול, גל אור וגל רעיונות מצייתים לאותן משוואות בסיסיות. שניהם: תדר, אמפליטודה, קצב.`})},
   mystery:   {lv:'d',fn:(a,b)=>({sub:'קשר מושגי — מה שמסתתר מתחת',exp:`${a.l} ו${b.l} שניהם מסתירים עולם שלם מתחת לפני השטח. שניהם מזמינים: "אל תתעצל בפני השטח — צלול." שניהם מתגמלים את מי שמוכן לחפור עמוק יותר.`})},
-  spiral:    {lv:'d',fn:(a,b)=>({sub:'קשר מדעי — ספירלת פיבונאצ\'י',exp:`${a.l} ו${b.l} חולקים את ספירלת פיבונאצ\'י — האלגוריתם שהטבע משתמש בו כשצריך לארוז את המירב ביעילות המרב. כנפי פרפר, צדף, גלקסיה — כולם.`})},
+  spiral:    {lv:'d',fn:(a,b)=>({sub:'קשר מדעי — ספירלת פיבונאצ\'י',exp:`${a.l} ו${b.l} חולקים את ספירלת פיבונאצ'י — האלגוריתם שהטבע משתמש בו כשצריך לארוז את המירב ביעילות המרב. כנפי פרפר, צדף, גלקסיה — כולם.`})},
   cyclic:    {lv:'r',fn:(a,b)=>({sub:'קשר סמלי — מחזוריות ותמיד-שוב',exp:`${a.l} ו${b.l} שניהם מחזוריים — חוזרים ומתחדשים. שניהם מלמדים שאין "סוף" אמיתי, רק שינוי צורה. כל מחזור מביא גרסה קצת שונה של מה שכבר היה.`})},
   light:     {lv:'p',fn:(a,b)=>({sub:'קשר ויזואלי — מקורות אור',exp:`${a.l} ו${b.l} שניהם מאירים את מה שמסביבם. שניהם הופכים חשכה לנראות. ההבדל: אחד מאיר פיזית, אחד מאיר רעיונית — אבל האפקט דומה.`})},
   pressure:  {lv:'d',fn:(a,b)=>({sub:'קשר מושגי — לחץ כמחוללך',exp:`${a.l} ו${b.l} שניהם נוצרו או מתעצמים תחת לחץ. הלחץ אינו האויב — הוא המורה שמי שעומד בו יוצא ממנו שונה ממה שנכנס.`})},
@@ -88,10 +101,19 @@ const TMAP: Record<string, TagEntry> = {
   emotion:   {lv:'r',fn:(a,b)=>({sub:'קשר סמלי — רגש שחוצה גבולות',exp:`${a.l} ו${b.l} שניהם מעוררים רגש עמוק — שניהם נוגעים במשהו שמעבר לרציונלי.`})},
 };
 
+const SUB_NAMES: Record<string, string> = {
+  water: 'בני המים', sky: 'תופעות שמיים', plant: 'צמחים', fire: 'אש', earth: 'בני האדמה',
+  gem: 'אבנים יקרות', science: 'כלי מדע', logic: 'לוגיקה', theater: 'תיאטרון', knowledge: 'ידע',
+  music: 'מוזיקה', goal: 'כיוון ומטרה', justice: 'צדק ואיזון', mind: 'תוצרי המוח', global: 'שלמות וחיבור',
+  land: 'יצורי יבשה', air: 'בני האוויר', tool: 'כלים', mystery: 'מסתורין', time: 'זמן',
+};
+
+const TMAP_ORDER = Object.keys(TMAP);
+
 // ── EVALUATION ENGINE ──
 export function evaluate(idxA: number, idxB: number): Evaluation {
   const ia = ITEMS[idxA], ib = ITEMS[idxB];
-  const k = [Math.min(idxA, idxB), Math.max(idxA, idxB)].join(',');
+  const k = pairKey(idxA, idxB);
 
   // 1. Hand-crafted secrets
   if (SECRETS[k]) return SECRETS[k];
@@ -118,9 +140,10 @@ export function evaluate(idxA: number, idxB: number): Evaluation {
     };
   }
 
-  // 4. Tag intersections
-  const shared = ia.t.filter(t => ib.t.includes(t));
-  if (shared.length >= 3) {
+  // 4. Tag intersections — in TMAP declaration order so the result doesn't depend on pick order
+  const sharedCount = ia.t.filter(t => ib.t.includes(t)).length;
+  const shared = TMAP_ORDER.filter(t => ia.t.includes(t) && ib.t.includes(t));
+  if (sharedCount >= 3) {
     const bestTag = shared.find(t => TMAP[t] && (TMAP[t].lv === 's' || TMAP[t].lv === 'd'))
       || shared.find(t => TMAP[t] && TMAP[t].lv === 'r')
       || shared.find(t => TMAP[t]);
@@ -130,7 +153,7 @@ export function evaluate(idxA: number, idxB: number): Evaluation {
       return { lv: entry.lv, sc: SCORE_VALUES[entry.lv], sub: result.sub, exp: result.exp };
     }
   }
-  if (shared.length >= 2) {
+  if (sharedCount >= 2) {
     const bestTag = shared.find(t => TMAP[t]);
     if (bestTag && TMAP[bestTag]) {
       const entry = TMAP[bestTag];
@@ -165,7 +188,7 @@ export function evaluate(idxA: number, idxB: number): Evaluation {
     };
     if (cats[ia.s]) {
       const c = cats[ia.s];
-      return { lv: c.lv, sc: SCORE_VALUES[c.lv], sub: `קשר קטגוריה — ${ia.s}`, exp: c.exp(ia, ib) };
+      return { lv: c.lv, sc: SCORE_VALUES[c.lv], sub: `קשר קטגוריה — ${SUB_NAMES[ia.s] ?? ia.s}`, exp: c.exp(ia, ib) };
     }
   }
 

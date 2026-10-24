@@ -1,24 +1,14 @@
-import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
-const NotFound = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">Oops! Page not found</p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
-      </div>
-    </div>
-  );
-};
+const NotFound = () => (
+  <div dir="rtl" className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 text-center px-6">
+    <div className="text-6xl" aria-hidden="true">🧩</div>
+    <h1 className="font-display text-5xl font-black text-gold-light">404</h1>
+    <p className="text-muted-foreground">הקשר הזה עדיין לא קיים — העמוד לא נמצא.</p>
+    <Link to="/" className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-display font-bold hover:opacity-90 transition">
+      חזרה למשחק
+    </Link>
+  </div>
+);
 
 export default NotFound;

@@ -79,9 +79,14 @@
   * {
     @apply border-border;
   }
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Heebo', sans-serif;
+    overscroll-behavior-y: none;
   }
 }
 
@@ -105,10 +110,27 @@
   to { opacity: 1; transform: translateX(0); }
 }
 @keyframes score-float {
-  0% { opacity: 0; transform: translateY(0) scale(0.8); }
-  15% { opacity: 1; transform: translateY(-14px) scale(1.05); }
-  80% { opacity: 1; transform: translateY(-65px); }
-  100% { opacity: 0; transform: translateY(-90px) scale(0.9); }
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
+  15% { opacity: 1; transform: translate(-50%, -14px) scale(1.1); }
+  80% { opacity: 1; transform: translate(-50%, -65px); }
+  100% { opacity: 0; transform: translate(-50%, -90px) scale(0.9); }
+}
+@keyframes score-bump {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes draw-line {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes card-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes title-glow {
+  0%, 100% { text-shadow: 0 0 24px hsl(var(--gold) / 0.25); }
+  50% { text-shadow: 0 0 42px hsl(var(--gold) / 0.5); }
 }
 @keyframes dup-flash {
   50% { border-color: hsl(var(--destructive)); background: hsl(var(--destructive) / 0.09); }
@@ -120,5 +142,20 @@
 .animate-eval-in { animation: eval-in 0.3s ease; }
 .animate-log-in { animation: log-in 0.2s ease; }
 .animate-score-float { animation: score-float 1.3s ease forwards; }
-.animate-dup-flash { animation: dup-flash 0.4s ease; }
+.animate-dup-flash { animation: dup-flash 0.4s ease; animation-iteration-count: 2; }
+.animate-score-bump { animation: score-bump 0.35s ease; }
+.animate-draw-line { stroke-dasharray: 1; animation: draw-line 0.5s ease-out both; }
+.card-enter { animation: card-enter 0.35s ease-out backwards; }
+.animate-title-glow { animation: title-glow 4s ease-in-out infinite; }
+
+.scrollbar-none { scrollbar-width: none; }
+.scrollbar-none::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 .animate-blink { animation: blink 0.8s infinite; }

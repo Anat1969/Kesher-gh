@@ -31,6 +31,14 @@ Relevant skills to use: `engineering:code-review`, `engineering:testing-strategy
   project can keep being edited in Lovable after the upgrade.
 - Don't rename/move core entry files (`index.html`, `src/main.tsx`, `src/App.tsx`).
 
+## Verification
+
+- Before pushing: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` must all pass
+  (CI in `.github/workflows/ci.yml` runs the same).
+- Check the UI in a real browser (Playwright, phone and desktop sizes) — Lovable exports often have
+  visual bugs (RTL/bidi, colours built from CSS variables) that only show when rendered.
+- `bun.lock` can't be refreshed from the cloud sandbox; `package-lock.json` is the source of truth there.
+
 ## Communication
 
 - The owner writes in Hebrew — reply in Hebrew.
