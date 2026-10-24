@@ -68,15 +68,14 @@ export default function ResultsScreen({
     <div
       dir="rtl"
       className="min-h-[100dvh] flex flex-col items-center py-8 px-4 pb-[max(2rem,env(safe-area-inset-bottom))]"
-      style={{ background: 'radial-gradient(ellipse at 50% 15%, hsl(var(--gold) / 0.08), transparent 60%)' }}
     >
-      <h1 className="font-display text-3xl font-black text-gold-light mb-1">סיום!</h1>
+      <h1 className="font-display text-3xl font-black text-foreground mb-1">סיום!</h1>
       {record?.isNewBest && (
-        <div className="mb-1 px-3 py-1 rounded-full bg-gold/20 border border-gold/40 text-gold-light text-xs font-bold animate-in zoom-in duration-500">
+        <div className="mb-1 px-3 py-1 rounded-full bg-foreground/[0.07] border border-foreground/25 text-foreground text-xs font-bold animate-in zoom-in duration-500">
           🏆 שיא אישי חדש!
         </div>
       )}
-      <div className="font-display text-7xl font-black text-gold-light tabular-nums animate-in zoom-in-50 duration-700" dir="ltr">{total}</div>
+      <div className="font-display text-7xl font-black text-foreground tabular-nums animate-in zoom-in-50 duration-700" dir="ltr">{total}</div>
       <div className="text-muted-foreground text-sm mb-1">{lastMs ? lastMs.lbl : 'בדרך לראות'}</div>
       <div className="text-xs text-muted-foreground/80 mb-4">
         {score} קשרים ישירים <span dir="ltr">+ {chainScore}</span> בונוס שרשרת · שיא: <span dir="ltr">{stats.bestScore}</span>
@@ -93,7 +92,7 @@ export default function ResultsScreen({
         {directConns.length > 0 && (
           <button
             onClick={onShare}
-            className="inline-flex items-center gap-2 border border-gold/40 text-gold-light px-5 py-2.5 rounded-full text-sm font-bold hover:bg-gold/10 transition"
+            className="inline-flex items-center gap-2 border border-foreground/25 text-foreground px-5 py-2.5 rounded-full text-sm font-bold hover:bg-foreground/5 transition"
           >
             {shareState === 'copied' || shareState === 'shared' ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
             {shareState === 'copied' ? 'הועתק!' : shareState === 'shared' ? 'שותף!' : 'שיתוף'}
@@ -107,7 +106,7 @@ export default function ResultsScreen({
           <li
             key={m.pts}
             className={`px-3 py-1 rounded-full text-xs font-display font-bold border ${
-              m.pts <= total ? 'bg-gold/20 text-gold-light border-gold/30' : 'bg-surface-2 text-muted-foreground/60 border-border'
+              m.pts <= total ? 'bg-foreground/[0.07] text-foreground border-foreground/25' : 'bg-surface-2 text-muted-foreground/60 border-border'
             }`}
           >
             {m.pts <= total ? '✓ ' : ''}{m.lbl} · {m.pts}
@@ -152,7 +151,7 @@ export default function ResultsScreen({
       {personality && (
         <section className="bg-surface-1 border border-border rounded-xl p-5 mb-6 max-w-md w-full text-right">
           <div className="text-[0.7rem] text-muted-foreground mb-1">סגנון החשיבה שלך</div>
-          <h2 className="font-display text-2xl font-bold text-gold-light mb-2">
+          <h2 className="font-display text-2xl font-bold text-foreground mb-2">
             {personality.emoji} {personality.type}
           </h2>
           <p className="text-sm text-foreground leading-relaxed mb-4">{personality.desc}</p>
@@ -164,7 +163,7 @@ export default function ResultsScreen({
             <div key={row.title} className="flex gap-3 items-start mb-3">
               <span className="text-lg" aria-hidden="true">{row.icon}</span>
               <div>
-                <div className="text-xs font-bold text-gold-light mb-0.5">{row.title}</div>
+                <div className="text-xs font-bold text-foreground mb-0.5">{row.title}</div>
                 <p className="text-xs text-muted-foreground leading-relaxed">{row.body}</p>
               </div>
             </div>
@@ -175,7 +174,7 @@ export default function ResultsScreen({
 
           {personality.best && (
             <div className="bg-surface-2 border border-border rounded-lg p-3 mt-4">
-              <div className="text-xs font-bold text-gold-light mb-1.5">הקשר הטוב ביותר שמצאתם</div>
+              <div className="text-xs font-bold text-foreground mb-1.5">הקשר הטוב ביותר שמצאתם</div>
               <div className="flex items-start gap-2">
                 <span className="text-2xl whitespace-nowrap">{ITEMS[personality.best.a].e}{ITEMS[personality.best.b].e}</span>
                 <div>
@@ -239,7 +238,7 @@ export default function ResultsScreen({
               <div
                 key={h.date}
                 title={`${h.total}`}
-                className={`flex-1 rounded-t ${i === arr.length - 1 ? 'bg-gold' : 'bg-surface-3'}`}
+                className={`flex-1 rounded-t ${i === arr.length - 1 ? 'bg-foreground' : 'bg-surface-3'}`}
                 style={{ height: `${Math.max(6, (h.total / Math.max(1, stats.bestScore)) * 100)}%` }}
               />
             ))}

@@ -4,74 +4,80 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design language 2 — "content in colour, tool in grey".
+ * Everything that is the tool (surfaces, text, buttons, borders, timers) is pure
+ * black/white and neutral greys (saturation 0). Colour is reserved for the content:
+ * the cards' emoji, the four connection levels and chain links.
+ */
 @layer base {
   :root {
-    --background: 230 60% 6%;
-    --foreground: 233 40% 90%;
+    /* ── Tool: neutral greys (light) ── */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 4%;
+    --surface-1: 0 0% 98%;
+    --surface-2: 0 0% 95%;
+    --surface-3: 0 0% 91%;
 
-    --card: 232 50% 8%;
-    --card-foreground: 233 40% 90%;
-
-    --popover: 232 50% 8%;
-    --popover-foreground: 233 40% 90%;
-
-    --primary: 42 50% 54%;
-    --primary-foreground: 230 60% 6%;
-
-    --secondary: 232 40% 12%;
-    --secondary-foreground: 233 40% 90%;
-
-    --muted: 233 20% 44%;
-    --muted-foreground: 233 20% 60%;
-
-    --accent: 232 35% 16%;
-    --accent-foreground: 233 40% 90%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 225 40% 16%;
-    --input: 225 40% 16%;
-    --ring: 42 50% 54%;
-
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 0 0% 4%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 4%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 38%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 0% 4%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 87%;
+    --input: 0 0% 87%;
+    --ring: 0 0% 25%;
     --radius: 0.65rem;
 
-    /* Game-specific tokens */
-    --gold: 42 50% 54%;
-    --gold-light: 42 55% 69%;
-    --level-pshat: 217 91% 60%;
-    --level-remez: 271 81% 56%;
-    --level-drash: 25 95% 53%;
-    --level-sod: 48 97% 47%;
-    --chain: 142 71% 45%;
-
-    --surface-1: 232 50% 8%;
-    --surface-2: 232 42% 13%;
-    --surface-3: 232 35% 16%;
-    --border-subtle: 225 40% 80% / 0.08;
-    --border-medium: 225 40% 80% / 0.18;
+    /* ── Content: connection levels (tuned for contrast on white) ── */
+    --level-pshat: 221 83% 48%;
+    --level-remez: 271 70% 50%;
+    --level-drash: 21 90% 46%;
+    --level-sod: 40 96% 38%;
+    --chain: 142 72% 32%;
   }
 
   .dark {
-    --background: 230 60% 6%;
-    --foreground: 233 40% 90%;
-    --card: 232 50% 8%;
-    --card-foreground: 233 40% 90%;
-    --popover: 232 50% 8%;
-    --popover-foreground: 233 40% 90%;
-    --primary: 42 50% 54%;
-    --primary-foreground: 230 60% 6%;
-    --secondary: 232 40% 12%;
-    --secondary-foreground: 233 40% 90%;
-    --muted: 233 20% 44%;
-    --muted-foreground: 233 20% 60%;
-    --accent: 232 35% 16%;
-    --accent-foreground: 233 40% 90%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 225 40% 16%;
-    --input: 225 40% 16%;
-    --ring: 42 50% 54%;
+    /* ── Tool: neutral greys (dark) ── */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --surface-1: 0 0% 7%;
+    --surface-2: 0 0% 11%;
+    --surface-3: 0 0% 15%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 96%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 0 0% 96%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 0% 96%;
+    --destructive-foreground: 0 0% 4%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 80%;
+
+    /* ── Content: connection levels (tuned for contrast on black) ── */
+    --level-pshat: 217 91% 62%;
+    --level-remez: 271 81% 68%;
+    --level-drash: 25 95% 56%;
+    --level-sod: 48 97% 52%;
+    --chain: 142 71% 48%;
   }
 }
 
@@ -80,8 +86,11 @@
     @apply border-border;
   }
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-tap-highlight-color: transparent;
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground antialiased;
@@ -98,7 +107,7 @@
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-thumb { background: hsl(var(--border-medium)); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 2px; }
 
 /* Animations */
 @keyframes eval-in {
@@ -128,12 +137,10 @@
   from { opacity: 0; transform: translateY(6px) scale(0.94); }
   to { opacity: 1; transform: none; }
 }
-@keyframes title-glow {
-  0%, 100% { text-shadow: 0 0 24px hsl(var(--gold) / 0.25); }
-  50% { text-shadow: 0 0 42px hsl(var(--gold) / 0.5); }
-}
 @keyframes dup-flash {
-  50% { border-color: hsl(var(--destructive)); background: hsl(var(--destructive) / 0.09); }
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); border-color: hsl(var(--foreground)); background: hsl(var(--foreground) / 0.08); }
+  75% { transform: translateX(3px); border-color: hsl(var(--foreground)); background: hsl(var(--foreground) / 0.08); }
 }
 @keyframes blink {
   50% { opacity: 0.5; }
@@ -146,7 +153,6 @@
 .animate-score-bump { animation: score-bump 0.35s ease; }
 .animate-draw-line { stroke-dasharray: 1; animation: draw-line 0.5s ease-out both; }
 .card-enter { animation: card-enter 0.35s ease-out backwards; }
-.animate-title-glow { animation: title-glow 4s ease-in-out infinite; }
 
 .scrollbar-none { scrollbar-width: none; }
 .scrollbar-none::-webkit-scrollbar { display: none; }

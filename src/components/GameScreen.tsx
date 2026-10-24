@@ -10,6 +10,7 @@ import { isHandCraftedSecret, pairKey, suggestConnectionTypes } from '../game/ev
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import PauseDialog from './PauseDialog';
+import { ThemeIconButton } from './ThemeToggle';
 
 interface GameScreenProps {
   state: GameState;
@@ -116,14 +117,15 @@ export default function GameScreen({
             >
               {settings.sound ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             </button>
-            <div className="font-display text-xl font-bold text-gold-light tracking-widest mr-1 hidden min-[360px]:block">קֶשֶׁר</div>
+            <ThemeIconButton />
+            <div className="font-display text-xl font-bold text-foreground tracking-widest mr-1 hidden min-[360px]:block">קֶשֶׁר</div>
           </div>
           <div className="flex items-center gap-3" aria-live="off">
-            <Stat label="ניקוד" className="text-2xl text-gold-light">
+            <Stat label="ניקוד" className="text-2xl text-foreground">
               <span key={totalScore} className="inline-block animate-score-bump">{totalScore}</span>
             </Stat>
-            <Stat label="שרשרת" className="text-xl text-chain">+{state.chainScore}</Stat>
-            <Stat label="קשרים" className="text-2xl text-gold-light">{state.directConns.length}</Stat>
+            <Stat label="שרשרת" className="text-xl text-foreground">+{state.chainScore}</Stat>
+            <Stat label="קשרים" className="text-2xl text-foreground">{state.directConns.length}</Stat>
             <div
               className="relative w-11 h-11 grid place-items-center"
               role="timer"
@@ -132,15 +134,15 @@ export default function GameScreen({
               <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90" aria-hidden="true">
                 <circle cx="18" cy="18" r="16" fill="none" strokeWidth="2.5" style={{ stroke: 'hsl(var(--border))' }} />
                 <circle
-                  cx="18" cy="18" r="16" fill="none" strokeWidth="2.5" strokeLinecap="round"
+                  cx="18" cy="18" r="16" fill="none" strokeWidth={isUrgent ? 3.5 : 2.5} strokeLinecap="round"
                   pathLength={100} strokeDasharray={`${timeFraction * 100} 100`}
                   className="transition-[stroke-dasharray] duration-1000 ease-linear"
-                  style={{ stroke: isUrgent ? 'hsl(var(--destructive))' : 'hsl(var(--gold))' }}
+                  style={{ stroke: 'hsl(var(--foreground))' }}
                 />
               </svg>
               <span
                 dir="ltr"
-                className={`font-display text-[0.8rem] font-bold tabular-nums ${isUrgent ? 'text-destructive animate-blink' : 'text-foreground'}`}
+                className={`font-display text-[0.8rem] font-bold tabular-nums text-foreground ${isUrgent ? 'animate-blink' : ''}`}
               >
                 {formatTime(state.timeLeft)}
               </span>
@@ -160,10 +162,10 @@ export default function GameScreen({
           >
             <div
               className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${milestonePercent}%`, background: 'linear-gradient(270deg, hsl(var(--level-pshat)), hsl(var(--level-sod)))' }}
+              style={{ width: `${milestonePercent}%`, background: 'hsl(var(--foreground))' }}
             />
           </div>
-          <span className="font-display text-[0.7rem] font-bold text-gold-light whitespace-nowrap">
+          <span className="font-display text-[0.7rem] font-bold text-foreground whitespace-nowrap">
             {nextMilestone ? `${currentMilestone?.lbl ?? 'התחלה'} ← ${nextMilestone.lbl}` : '🏆 מאסטר!'}
           </span>
         </div>
@@ -223,10 +225,10 @@ export default function GameScreen({
                   transition-[transform,background-color,border-color,opacity,box-shadow] duration-150
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
                   ${isActive
-                    ? 'border-gold-light bg-gold-light/[0.13] scale-[1.07] shadow-[0_0_18px_hsl(var(--gold-light)/0.3)] cursor-default'
+                    ? 'border-foreground bg-foreground/[0.06] scale-[1.07] shadow-[0_6px_20px_hsl(var(--foreground)/0.14)] cursor-default'
                     : isUsed
                       ? 'bg-background/60 border-border/25 opacity-50 cursor-not-allowed'
-                      : 'bg-surface-2 border-border hover:border-gold/50 hover:bg-surface-3 hover:-translate-y-0.5 active:scale-95 cursor-pointer'
+                      : 'bg-surface-2 border-border hover:border-foreground/40 hover:bg-surface-3 hover:-translate-y-0.5 active:scale-95 cursor-pointer'
                   }
                 `}
               >
@@ -243,7 +245,7 @@ export default function GameScreen({
                 </span>
                 {order && (
                   <span
-                    className={`absolute bottom-0.5 left-1 font-display leading-none font-bold ${isActive ? 'text-gold-light' : 'text-primary'}`}
+                    className={`absolute bottom-0.5 left-1 font-display leading-none font-bold ${isActive ? 'text-foreground' : 'text-primary'}`}
                     style={{ fontSize: 'clamp(0.5rem, 1.3vw, 0.65rem)' }}
                     aria-hidden="true"
                   >
@@ -324,14 +326,14 @@ export default function GameScreen({
                   className="text-right w-full text-[0.74rem] leading-relaxed text-foreground rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <span className={expanded ? '' : 'line-clamp-2'}>{lastEval.ev.exp}</span>
-                  {!expanded && <span className="text-[0.65rem] text-gold-light/80"> הרחבה ▾</span>}
+                  {!expanded && <span className="text-[0.65rem] text-muted-foreground"> הרחבה ▾</span>}
                 </button>
               </div>
             </div>
           </div>
         ) : (
           <div className="px-3 py-3 text-center text-muted-foreground text-sm">
-            לחצו על <strong className="text-gold-light">שני כרטיסים</strong> כדי לגלות את הקשר ביניהם
+            לחצו על <strong className="text-foreground">שני כרטיסים</strong> כדי לגלות את הקשר ביניהם
           </div>
         )}
 

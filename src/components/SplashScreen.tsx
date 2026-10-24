@@ -5,6 +5,7 @@ import { SECRET_KEYS } from '../game/evaluator';
 import type { Settings, Stats } from '../lib/storage';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
 import { SettingsToggles } from './PauseDialog';
+import { ThemeIconButton } from './ThemeToggle';
 
 interface SplashScreenProps {
   stats: Stats;
@@ -28,16 +29,18 @@ export default function SplashScreen({ stats, settings, onStart, onSettings }: S
     <div
       dir="rtl"
       className="min-h-[100dvh] flex flex-col items-center px-5 pt-[max(2.5rem,env(safe-area-inset-top))] pb-10 text-center"
-      style={{ background: 'radial-gradient(ellipse at 50% 15%, hsl(var(--gold) / 0.1), transparent 60%)' }}
     >
-      <h1 className="font-display text-[5.5rem] sm:text-[6.5rem] font-black text-gold-light tracking-wider leading-none mb-1 animate-title-glow">
+      <div className="self-stretch flex justify-end max-w-[500px] w-full mx-auto -mt-4 mb-2">
+        <ThemeIconButton />
+      </div>
+      <h1 className="font-display text-[5.5rem] sm:text-[6.5rem] font-black text-foreground tracking-wider leading-none mb-1">
         קֶשֶׁר
       </h1>
       <p className="text-sm text-muted-foreground tracking-wide mb-6">מצאו קשרים — המערכת מגלה את עומקם</p>
 
       <button
         onClick={onStart}
-        className="bg-primary text-primary-foreground px-12 py-3.5 rounded-full font-display text-xl font-bold shadow-[0_0_30px_hsl(var(--gold)/0.35)] hover:opacity-90 transition-all hover:scale-[1.04] active:scale-[0.98] tracking-wide mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="bg-primary text-primary-foreground px-12 py-3.5 rounded-full font-display text-xl font-bold hover:opacity-90 transition-all hover:scale-[1.04] active:scale-[0.98] tracking-wide mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         {stats.gamesPlayed > 0 ? 'משחק חדש' : 'התחילו לשחק'}
       </button>
@@ -52,7 +55,7 @@ export default function SplashScreen({ stats, settings, onStart, onSettings }: S
           ].map(s => (
             <div key={s.label} className="bg-surface-1 border border-border rounded-xl py-2.5">
               <div className="text-[0.65rem] text-muted-foreground">{s.icon} {s.label}</div>
-              <div className="font-display text-xl font-bold text-gold-light tabular-nums" dir="ltr">{s.value}</div>
+              <div className="font-display text-xl font-bold text-foreground tabular-nums" dir="ltr">{s.value}</div>
             </div>
           ))}
         </section>
@@ -62,9 +65,9 @@ export default function SplashScreen({ stats, settings, onStart, onSettings }: S
       <section aria-labelledby="how-title" className="max-w-[500px] w-full">
         <h2 id="how-title" className="sr-only">איך משחקים</h2>
         <p className="text-sm text-muted-foreground leading-7 mb-5">
-          בונים <strong className="text-gold-light">שרשרת אחת</strong> של כל 25 הכרטיסים: כל כרטיס חדש מתחבר לקודם.<br />
+          בונים <strong className="text-foreground">שרשרת אחת</strong> של כל 25 הכרטיסים: כל כרטיס חדש מתחבר לקודם.<br />
           המערכת מזהה ומסבירה את הקשר — ככל שהוא עמוק יותר, הניקוד גבוה יותר.<br />
-          <strong className="text-gold-light">{GAME_DURATION / 60} דקות · מטרה: 300 נקודות</strong>
+          <strong className="text-foreground">{GAME_DURATION / 60} דקות · מטרה: 300 נקודות</strong>
         </p>
 
         <div className="grid grid-cols-2 gap-2.5 mb-3">
@@ -107,7 +110,7 @@ export default function SplashScreen({ stats, settings, onStart, onSettings }: S
       {canInstall && (
         <button
           onClick={install}
-          className="mt-4 inline-flex items-center gap-2 text-sm text-gold-light border border-gold/30 rounded-full px-4 py-2 hover:bg-gold/10 transition"
+          className="mt-4 inline-flex items-center gap-2 text-sm text-foreground border border-foreground/25 rounded-full px-4 py-2 hover:bg-foreground/5 transition"
         >
           <Download className="w-4 h-4" /> התקנה כאפליקציה
         </button>

@@ -24,6 +24,16 @@ Relevant skills to use: `engineering:code-review`, `engineering:testing-strategy
 `engineering:tech-debt`, `simplify`, `security-review`, `run` (to see the app working),
 `artifact-design` / `dataviz` for visual work.
 
+## Design language 2 (owner's choice for this project)
+
+- **Light and dark themes**, switchable (light / dark / system), both first-class.
+- **The tool is black, white and neutral greys only** (saturation 0): backgrounds, surfaces,
+  text, buttons, borders, icons, timers, progress bars, dialogs.
+- **Colour belongs only to the content** — here: card emoji, the four connection levels
+  (pshat/remez/drash/sod), connection lines and chain links. This contrast is the point:
+  it makes the content stand out from the tool.
+- Tokens live in `src/index.css` (`:root` = light, `.dark` = dark); never hard-code chrome colours.
+
 ## Lovable compatibility rules
 
 - Lovable syncs the default branch; do the upgrade work on a feature branch and let the owner merge.

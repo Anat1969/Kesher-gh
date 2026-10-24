@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import type { Settings } from '../lib/storage';
+import ThemeToggle from './ThemeToggle';
 
 interface PauseDialogProps {
   open: boolean;
@@ -14,6 +15,7 @@ interface PauseDialogProps {
 export function SettingsToggles({ settings, onSettings }: Pick<PauseDialogProps, 'settings' | 'onSettings'>) {
   return (
     <div className="space-y-3">
+      <ThemeToggle />
       <label className="flex items-center justify-between gap-4 text-sm cursor-pointer">
         <span>🔊 צלילים</span>
         <Switch dir="ltr" checked={settings.sound} onCheckedChange={sound => onSettings({ sound })} aria-label="צלילים" />
@@ -30,7 +32,7 @@ export default function PauseDialog({ open, settings, onResume, onFinish, onMenu
   return (
     <Dialog open={open} onOpenChange={o => { if (!o) onResume(); }}>
       <DialogContent dir="rtl" className="max-w-[340px] rounded-2xl bg-surface-1 border-border text-right">
-        <DialogTitle className="font-display text-2xl text-gold-light text-center">⏸ המשחק מושהה</DialogTitle>
+        <DialogTitle className="font-display text-2xl text-foreground text-center">⏸ המשחק מושהה</DialogTitle>
         <DialogDescription className="text-center">השעון עצר. אפשר להמשיך מאותה נקודה.</DialogDescription>
 
         <div className="bg-surface-2 rounded-xl p-4 my-1">

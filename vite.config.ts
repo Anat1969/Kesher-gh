@@ -28,8 +28,8 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         display: "standalone",
         orientation: "portrait",
-        background_color: "#060918",
-        theme_color: "#060918",
+        background_color: "#0a0a0a",
+        theme_color: "#0a0a0a",
         categories: ["games", "education"],
         icons: [
           { src: "pwa-192x192.png", sizes: "192x192", type: "image/png" },
