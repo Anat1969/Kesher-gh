@@ -63,6 +63,14 @@ S(2,18,'r','קשר סמלי — כנפיים שמסתירות','פרפר ומס�
 /** Keys of the hand-crafted "sod" pairs — the hidden secrets players can collect. */
 export const SECRET_KEYS: readonly string[] = Object.keys(SECRETS).filter(k => SECRETS[k].lv === 's');
 
+/** The hand-crafted secrets as pairs, for the collection page. */
+export function secretEntries(): { key: string; a: number; b: number; ev: Evaluation }[] {
+  return SECRET_KEYS.map(key => {
+    const [a, b] = key.split(',').map(Number);
+    return { key, a, b, ev: SECRETS[key] };
+  });
+}
+
 export function isHandCraftedSecret(a: number, b: number): boolean {
   const s = SECRETS[pairKey(a, b)];
   return !!s && s.lv === 's';

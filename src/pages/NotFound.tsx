@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
 
 const NotFound = () => (
-  <div dir="rtl" className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 text-center px-6">
-    <div className="text-6xl" aria-hidden="true">🧩</div>
-    <h1 className="font-display text-5xl font-black text-foreground">404</h1>
-    <p className="text-muted-foreground">הקשר הזה עדיין לא קיים — העמוד לא נמצא.</p>
-    <Link to="/" className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full font-display font-bold hover:opacity-90 transition">
-      חזרה למשחק
-    </Link>
-  </div>
+  <main
+    className="flex flex-col items-center justify-center gap-4 px-6 text-center"
+    style={{ minHeight: 'calc(100dvh - var(--bar-h))' }}
+  >
+    <p className="label-mono">404</p>
+    <h1 className="text-5xl font-thin">הקשר הזה עדיין לא קיים</h1>
+    <p className="text-muted-foreground">העמוד שחיפשתם לא נמצא.</p>
+    <Link to="/" className="btn btn-primary mt-2 h-12 px-8">לדף הבית</Link>
+  </main>
 );
 
 export default NotFound;

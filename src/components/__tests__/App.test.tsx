@@ -7,15 +7,15 @@ describe('App', () => {
 
   it('plays a connection end-to-end and finishes from the pause menu', async () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'התחילו לשחק' }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'התחילו לשחק' })[0]);
 
     const cards = screen.getByRole('group', { name: 'כרטיסי המשחק' });
     expect(cards.querySelectorAll('button')).toHaveLength(25);
 
     fireEvent.click(screen.getByRole('button', { name: 'נבט' }));
     fireEvent.click(screen.getByRole('button', { name: 'ברק' }));
-    expect(screen.getAllByText('סוֹד').length).toBeGreaterThan(0);
-    expect(screen.getByText('✨ סוד חדש נחשף!')).toBeInTheDocument();
+    expect((await screen.findAllByText('סוֹד')).length).toBeGreaterThan(0);
+    expect(await screen.findByText('סוד חדש נחשף')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'השהיה ותפריט' }));
     await act(async () => {
@@ -23,7 +23,7 @@ describe('App', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'סיום!' })).toBeInTheDocument();
-    expect(screen.getByText('🏆 שיא אישי חדש!')).toBeInTheDocument();
+    expect(await screen.findByText('שיא אישי חדש')).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem('kesher:stats:v1')!).gamesPlayed).toBe(1);
   });
 });
