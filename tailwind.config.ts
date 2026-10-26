@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -24,7 +25,6 @@ export default {
         accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
         popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
-        gold: { DEFAULT: "hsl(var(--gold))", light: "hsl(var(--gold-light))" },
         "level-pshat": "hsl(var(--level-pshat))",
         "level-remez": "hsl(var(--level-remez))",
         "level-drash": "hsl(var(--level-drash))",
@@ -51,5 +51,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;

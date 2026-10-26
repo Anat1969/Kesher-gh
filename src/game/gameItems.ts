@@ -49,6 +49,20 @@ export const LEVEL_COLORS: Record<Level, string> = {
   s: 'hsl(var(--level-sod))',
 };
 
+const LEVEL_VARS: Record<Level, string> = {
+  p: '--level-pshat',
+  r: '--level-remez',
+  d: '--level-drash',
+  s: '--level-sod',
+};
+
+/** Theme-aware level colour with optional alpha, usable in inline styles and SVG `style`. */
+export function levelColor(lv: Level, alpha = 1): string {
+  return alpha >= 1 ? `hsl(var(${LEVEL_VARS[lv]}))` : `hsl(var(${LEVEL_VARS[lv]}) / ${alpha})`;
+}
+
+export const LEVEL_ORDER: readonly Level[] = ['p', 'r', 'd', 's'];
+
 export const LEVEL_NAMES: Record<Level, string> = {
   p: 'פָּשָׁט',
   r: 'רֶמֶז',
