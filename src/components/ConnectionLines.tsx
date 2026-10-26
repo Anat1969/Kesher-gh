@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { levelColor } from '../game/gameItems';
 import type { Connection } from '../game/personality';
@@ -13,12 +13,11 @@ interface ConnectionLinesProps {
 }
 
 /**
- * SVG overlay that draws curved, glowing connection lines between the centres of the
+ * SVG overlay that drafts hairline connection curves between the centres of the
  * `[data-card]` elements inside its parent (which must be positioned).
  */
 export default function ConnectionLines({ directConns, chainConns, newestId }: ConnectionLinesProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const glowId = useId().replace(/:/g, '');
   const [centers, setCenters] = useState<Record<number, Point>>({});
   const [size, setSize] = useState({ w: 0, h: 0 });
 
@@ -30,18 +29,8 @@ export default function ConnectionLines({ directConns, chainConns, newestId }: C
       const ar = area.getBoundingClientRect();
       const next: Record<number, Point> = {};
       area.querySelectorAll<HTMLElement>('[data-card]').forEach(el => {
-        // offset* ignores transforms, so lifted or pressed cards don't move their anchor.
-        let x = el.offsetWidth / 2, y = el.offsetHeight / 2;
-        let node: HTMLElement | null = el;
-        while (node && node !== area) {
-          x += node.offsetLeft; y += node.offsetTop;
-          node = node.offsetParent as HTMLElement | null;
-        }
-        if (node !== area) {
-          const r = el.getBoundingClientRect();
-          x = r.left + r.width / 2 - ar.left; y = r.top + r.height / 2 - ar.top;
-        }
-        next[Number(el.dataset.card)] = { x, y };
+        const r = el.getBoundingClientRect();
+        next[Number(el.dataset.card)] = { x: r.left + r.width / 2 - ar.left, y: r.top + r.height / 2 - ar.top };
       });
       setCenters(next);
       setSize({ w: ar.width, h: ar.height });
@@ -60,39 +49,34 @@ export default function ConnectionLines({ directConns, chainConns, newestId }: C
     const dx = B.x - A.x, dy = B.y - A.y;
     const len = Math.hypot(dx, dy) || 1;
     // Bow each curve sideways by a fraction of its length, so parallel lines separate.
-    const bow = Math.min(22, len * 0.12);
+    const bow = Math.min(18, len * 0.1);
     const cx = mx - (dy / len) * bow, cy = my + (dx / len) * bow;
     return { d: `M${A.x},${A.y} Q${cx},${cy} ${B.x},${B.y}`, px: (A.x + 2 * cx + B.x) / 4, py: (A.y + 2 * cy + B.y) / 4 };
   };
 
   return (
     <svg ref={svgRef} className="pointer-events-none absolute inset-0 z-[1] overflow-visible" width={size.w} height={size.h} aria-hidden="true">
-      <defs>
-        <filter id={glowId} x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3.5" />
-        </filter>
-      </defs>
       {chainConns.map((c, i) => {
         const p = path(c);
         return p && (
-          <motion.path key={`c${i}`} d={p.d} fill="none" strokeDasharray="3 5" strokeWidth={1.4} strokeLinecap="round"
-            style={{ stroke: 'hsl(var(--chain) / 0.55)' }}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }} />
+          <motion.path key={`c${i}`} d={p.d} fill="none" strokeDasharray="2 4" strokeWidth={1}
+            style={{ stroke: 'hsl(var(--chain) / 0.7)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
         );
       })}
       {directConns.map((c, i) => {
         const p = path(c);
         if (!p) return null;
         const isNew = i === directConns.length - 1 && newestId > 0;
-        const draw = isNew ? { initial: { pathLength: 0 }, animate: { pathLength: 1 }, transition: { duration: 0.55, ease: 'easeOut' as const } } : {};
         return (
           <g key={`d${i}`}>
-            <motion.path d={p.d} fill="none" strokeWidth={7} strokeLinecap="round" filter={`url(#${glowId})`}
-              style={{ stroke: levelColor(c.ev.lv, 0.35) }} {...draw} />
-            <motion.path d={p.d} fill="none" strokeWidth={2.2} strokeLinecap="round"
-              style={{ stroke: levelColor(c.ev.lv, 0.9) }} {...draw} />
-            <motion.circle cx={p.px} cy={p.py} r={3.2} style={{ fill: levelColor(c.ev.lv) }}
-              initial={isNew ? { scale: 0 } : false} animate={{ scale: 1 }} transition={{ delay: isNew ? 0.45 : 0, type: 'spring', stiffness: 500, damping: 18 }} />
+            <motion.path d={p.d} fill="none" strokeWidth={1.4} strokeLinecap="round"
+              style={{ stroke: levelColor(c.ev.lv) }}
+              initial={isNew ? { pathLength: 0 } : false} animate={{ pathLength: 1 }}
+              transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }} />
+            <motion.circle cx={p.px} cy={p.py} r={2.6} strokeWidth={1}
+              style={{ fill: 'hsl(var(--surface-1))', stroke: levelColor(c.ev.lv) }}
+              initial={isNew ? { opacity: 0 } : false} animate={{ opacity: 1 }} transition={{ delay: isNew ? 0.6 : 0, duration: 0.3 }} />
           </g>
         );
       })}

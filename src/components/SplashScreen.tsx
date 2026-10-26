@@ -12,147 +12,159 @@ interface SplashScreenProps {
   onStart: () => void;
 }
 
-const rise = (delay: number) => ({
-  initial: { opacity: 0, y: 14 },
+const fade = (delay: number) => ({
+  initial: { opacity: 0, y: 6 },
   animate: { opacity: 1, y: 0 },
-  transition: { delay, duration: 0.6, ease: [0.2, 0.8, 0.2, 1] },
+  transition: { delay, duration: 0.8, ease: [0.4, 0, 0.2, 1] },
+});
+
+const inView = (delay = 0) => ({
+  initial: { opacity: 0 },
+  whileInView: { opacity: 1 },
+  viewport: { once: true, margin: '-40px' },
+  transition: { delay, duration: 0.8, ease: [0.4, 0, 0.2, 1] },
 });
 
 export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
   const played = stats.gamesPlayed > 0;
 
   return (
-    <main className="mx-auto max-w-[1080px] px-4 pb-16">
+    <main className="mx-auto max-w-[1120px] px-5 pb-20">
       {/* Hero */}
-      <section className="grid grid-cols-[minmax(0,1fr)] items-center gap-2 pt-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-10 md:pt-14">
-        <div className="order-2 text-center md:order-1 md:text-right">
-          <motion.p {...rise(0.05)} className="label-mono mb-4">משחק קשרים · {TOTAL_CARDS} כרטיסים · {GAME_DURATION / 60} דקות</motion.p>
-          <motion.h1 {...rise(0.12)} className="text-[5.5rem] sm:text-[7.5rem] font-thin leading-[0.85] tracking-tight text-foreground">
+      <section className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 pt-10 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-16 md:pt-20">
+        <div>
+          <motion.p {...fade(0)} className="label-mono flex items-center gap-3">
+            <span className="h-px w-8 bg-foreground/40" />
+            משחק קשרים בעברית
+          </motion.p>
+          <motion.h1 {...fade(0.08)} className="mt-6 text-[5.5rem] font-thin leading-[0.85] tracking-tight sm:text-[8rem]">
             קֶשֶׁר
           </motion.h1>
-          <motion.p {...rise(0.2)} className="mt-5 text-xl sm:text-2xl font-light leading-snug text-foreground/85 max-w-[30ch] mx-auto md:mx-0">
-            בונים שרשרת אחת מכל הכרטיסים. המערכת מגלה כמה עמוק כל קשר.
+          <motion.p {...fade(0.16)} className="mt-7 max-w-[34ch] text-xl font-light leading-relaxed text-foreground/80 sm:text-[1.4rem]">
+            שרשרת אחת של {TOTAL_CARDS} מילים. כל חיבור נמדד בעומקו, מהגלוי ועד הנסתר.
           </motion.p>
 
-          <motion.div {...rise(0.3)} className="mt-8 flex flex-wrap items-center justify-center gap-3 md:justify-start">
-            <button onClick={onStart} className="btn btn-primary h-14 px-10 text-lg">
-              {played ? 'משחק חדש' : 'התחילו לשחק'}
+          <motion.div {...fade(0.24)} className="mt-10 flex flex-wrap items-center gap-3">
+            <button onClick={onStart} className="btn btn-primary h-12 px-9 text-base">
+              {played ? 'משחק חדש' : 'התחלת משחק'}
             </button>
-            <Link to="/guide" className="btn btn-ghost h-14 px-6 text-base">איך משחקים</Link>
+            <Link to="/guide" className="btn btn-ghost h-12 px-6 text-base">איך משחקים</Link>
           </motion.div>
 
-          {played && (
-            <motion.dl {...rise(0.4)} className="mt-8 grid grid-cols-3 gap-px overflow-hidden rounded-md border border-border bg-border shadow-sm" aria-label="השיאים שלך">
-              {[
-                { label: 'שיא אישי', value: stats.bestScore },
-                { label: 'משחקים', value: stats.gamesPlayed },
-                { label: 'סודות', value: `${stats.secrets.length}/${SECRET_KEYS.length}` },
-              ].map(s => (
-                <div key={s.label} className="bg-gradient-to-b from-surface-1 to-surface-2 px-3 py-3 text-center md:text-right">
-                  <dt className="label-mono">{s.label}</dt>
-                  <dd className="display-num mt-1.5 text-3xl text-foreground" dir="ltr">{s.value}</dd>
-                </div>
-              ))}
-            </motion.dl>
-          )}
+          <motion.dl {...fade(0.32)} className="mt-12 grid max-w-[460px] grid-cols-3 border-t border-border pt-4">
+            {(played
+              ? [
+                  { label: 'שיא אישי', value: stats.bestScore },
+                  { label: 'משחקים', value: stats.gamesPlayed },
+                  { label: 'סודות', value: `${stats.secrets.length}/${SECRET_KEYS.length}` },
+                ]
+              : [
+                  { label: 'מילים', value: TOTAL_CARDS },
+                  { label: 'דקות', value: GAME_DURATION / 60 },
+                  { label: 'סודות', value: SECRET_KEYS.length },
+                ]
+            ).map((s, i) => (
+              <div key={s.label} className={i > 0 ? 'border-r border-border pr-4' : ''}>
+                <dt className="label-mono">{s.label}</dt>
+                <dd className="display-num mt-2 text-[2.1rem]" dir="ltr" style={{ textAlign: 'right' }}>{s.value}</dd>
+              </div>
+            ))}
+          </motion.dl>
         </div>
 
-        <motion.div
-          className="order-1 md:order-2"
-          initial={{ opacity: 0, scale: 0.94 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 1.2 }}>
           <BoardHero />
         </motion.div>
       </section>
 
-      {/* Section cut: the four depths */}
-      <section aria-labelledby="depth-title" className="mt-14 md:mt-20">
-        <div className="mb-6 flex items-end justify-between gap-4">
+      {/* The four depths, as a table of contents */}
+      <section aria-labelledby="depth-title" className="mt-24 md:mt-32">
+        <motion.div {...inView()} className="grid grid-cols-[minmax(0,1fr)] gap-3 border-b border-foreground/80 pb-4 md:grid-cols-[minmax(0,1fr)_auto]">
           <div>
-            <p className="label-mono mb-2">חתך עומק</p>
-            <h2 id="depth-title" className="text-3xl sm:text-4xl font-extralight">ארבע שכבות של קשר</h2>
+            <p className="label-mono">01 · שיטה</p>
+            <h2 id="depth-title" className="mt-3 text-4xl font-extralight sm:text-5xl">ארבע שכבות של קשר</h2>
           </div>
-          <p className="label-mono hidden sm:block">נקודות לקשר</p>
-        </div>
+          <p className="max-w-[40ch] self-end text-sm leading-relaxed text-muted-foreground">
+            ארבע דרכי הפרשנות המסורתיות, פשט, רמז, דרש וסוד, הופכות כאן לסרגל מדידה של חשיבה.
+          </p>
+        </motion.div>
 
-        <ol className="overflow-hidden rounded-md border border-border shadow-lg">
+        <ol>
           {LEVEL_ORDER.map((lv, i) => (
             <motion.li
               key={lv}
-              initial={{ opacity: 0, x: 24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: '-40px' }}
-              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
-              className="relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-border px-5 py-5 last:border-b-0 sm:grid-cols-[9rem_minmax(0,1fr)_auto] sm:px-7"
-              style={{
-                background: `linear-gradient(180deg, hsl(var(--surface-${Math.min(3, i + 1)})), hsl(var(--surface-${Math.min(3, i + 1)}) / 0.6))`,
-                boxShadow: `inset 0 ${2 + i * 3}px ${6 + i * 6}px -${4 + i}px hsl(var(--shade) / ${0.05 + i * 0.05})`,
-              }}
+              {...inView(i * 0.08)}
+              className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-baseline gap-4 border-b border-border py-6 sm:grid-cols-[3.5rem_11rem_minmax(0,1fr)_auto] sm:gap-8"
             >
-              <span className="absolute inset-y-0 right-0 w-1" style={{ background: levelColor(lv) }} />
-              <div>
-                <div className="label-mono mb-1">שכבה {i + 1}</div>
-                <div className="text-3xl font-light" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</div>
+              <span className="num-mono text-sm text-muted-foreground" dir="ltr" style={{ textAlign: 'right' }}>0{i + 1}</span>
+              <span className="text-3xl font-extralight" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</span>
+              <div className="col-span-3 col-start-2 row-start-2 sm:col-span-1 sm:col-start-auto sm:row-start-auto">
+                <div className="text-base font-normal">{LEVEL_INFO[lv].title}</div>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{LEVEL_INFO[lv].desc}. {LEVEL_INFO[lv].examples}</p>
               </div>
-              <div className="col-span-2 row-start-2 sm:col-span-1 sm:row-start-auto">
-                <div className="text-base font-medium text-foreground">{LEVEL_INFO[lv].title}</div>
-                <p className="mt-0.5 text-sm text-muted-foreground leading-relaxed">{LEVEL_INFO[lv].desc}. {LEVEL_INFO[lv].examples}</p>
-              </div>
-              <div className="col-start-2 row-start-1 text-left sm:col-start-auto sm:row-start-auto">
-                <span className="display-num text-4xl" style={{ color: levelColor(lv) }} dir="ltr">{SCORE_VALUES[lv]}</span>
-              </div>
+              <span className="col-start-3 row-start-1 text-left sm:col-start-auto sm:row-start-auto">
+                <span className="display-num text-3xl" dir="ltr">{SCORE_VALUES[lv]}</span>
+                <span className="label-mono mr-1.5">נק׳</span>
+              </span>
             </motion.li>
           ))}
         </ol>
       </section>
 
-      {/* Chain bonus diagram */}
-      <section aria-labelledby="chain-title" className="mt-14 grid items-center gap-8 md:grid-cols-2">
-        <div>
-          <p className="label-mono mb-2">בונוס</p>
-          <h2 id="chain-title" className="text-3xl sm:text-4xl font-extralight">חיבורי שרשרת</h2>
-          <p className="mt-3 text-base leading-relaxed text-muted-foreground max-w-[44ch]">
+      {/* Chain bonus */}
+      <section aria-labelledby="chain-title" className="mt-24 grid grid-cols-[minmax(0,1fr)] items-center gap-10 md:grid-cols-2 md:gap-16">
+        <motion.div {...inView()}>
+          <p className="label-mono">02 · בונוס</p>
+          <h2 id="chain-title" className="mt-3 text-4xl font-extralight sm:text-5xl">חיבורי שרשרת</h2>
+          <p className="mt-5 max-w-[44ch] text-base leading-relaxed text-muted-foreground">
             כשמחברים א׳ לב׳ ואז ב׳ לג׳, המערכת חושפת גם את הקשר הסמוי בין א׳ לג׳, ומוסיפה עליו
-            <span className="font-medium text-foreground"> {Math.round(CHAIN_RATIO * 100)}% </span>
-            מערכו. שרשרת חכמה מכפילה את הניקוד.
+            <span className="text-foreground"> {Math.round(CHAIN_RATIO * 100)}% </span>
+            מערכו. מי שבונה שרשרת בתבונה, מכפיל את הניקוד.
           </p>
-        </div>
-        <ChainDiagram />
+        </motion.div>
+        <motion.div {...inView(0.1)}>
+          <ChainDiagram />
+        </motion.div>
       </section>
 
-      <div className="mt-16 flex justify-center">
-        <button onClick={onStart} className="btn btn-primary h-14 px-12 text-lg">{played ? 'משחק חדש' : 'התחילו לשחק'}</button>
-      </div>
+      <motion.div {...inView()} className="mt-24 flex flex-col items-center gap-6 border-t border-border pt-12 text-center">
+        <p className="text-2xl font-extralight sm:text-3xl">חמש דקות. עשרים וחמש מילים. שרשרת אחת.</p>
+        <button onClick={onStart} className="btn btn-primary h-12 px-10 text-base">{played ? 'משחק חדש' : 'התחלת משחק'}</button>
+      </motion.div>
     </main>
   );
 }
 
 function ChainDiagram() {
   const nodes = [
-    { x: 300, y: 60, e: '🌊', l: 'גל' },
-    { x: 160, y: 150, e: '🎵', l: 'תו' },
-    { x: 40, y: 60, e: '📖', l: 'ספר' },
+    { x: 300, y: 70, l: 'גל', k: 'א׳' },
+    { x: 170, y: 170, l: 'תו', k: 'ב׳' },
+    { x: 40, y: 70, l: 'ספר', k: 'ג׳' },
   ];
+  const draw = (delay: number) => ({
+    initial: { pathLength: 0 },
+    whileInView: { pathLength: 1 },
+    viewport: { once: true },
+    transition: { delay, duration: 0.9, ease: [0.4, 0, 0.2, 1] },
+  });
   return (
-    <div className="panel relative mx-auto w-full max-w-[420px] p-4" aria-hidden="true">
-      <svg viewBox="0 0 340 210" className="w-full">
-        <motion.path d="M300,60 L160,150" stroke={levelColor('s')} strokeWidth={2.5} strokeLinecap="round" fill="none"
-          initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }} />
-        <motion.path d="M160,150 L40,60" stroke={levelColor('s')} strokeWidth={2.5} strokeLinecap="round" fill="none"
-          initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ delay: 0.6, duration: 0.6 }} />
-        <motion.path d="M300,60 Q170,10 40,60" stroke="hsl(var(--chain))" strokeWidth={1.8} strokeDasharray="5 5" fill="none"
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.3, duration: 0.6 }} />
-        <motion.text x="170" y="30" textAnchor="middle" className="font-mono" fontSize="11" fill="hsl(var(--chain))"
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.6 }}>
-          שרשרת +{Math.round(CHAIN_RATIO * 100)}%
-        </motion.text>
+    <div className="panel relative mx-auto w-full max-w-[460px] p-5" aria-hidden="true">
+      <div className="label-mono mb-2 flex justify-between border-b border-border pb-2">
+        <span>גיליון 02 · חיבור שרשרת</span>
+        <span>סוד · סוד · סוד</span>
+      </div>
+      <svg viewBox="0 0 340 220" className="w-full">
+        <motion.path d="M300,70 L170,170" stroke={levelColor('s')} strokeWidth={1.25} fill="none" {...draw(0)} />
+        <motion.path d="M170,170 L40,70" stroke={levelColor('s')} strokeWidth={1.25} fill="none" {...draw(0.8)} />
+        <motion.path d="M300,70 Q170,0 40,70" stroke="hsl(var(--chain))" strokeWidth={1} strokeDasharray="3 4" fill="none" {...draw(1.6)} />
+        <text x="170" y="26" textAnchor="middle" fontSize="11" fill="hsl(var(--chain))" style={{ fontFamily: 'IBM Plex Mono' }}>
+          +{Math.round(CHAIN_RATIO * 100)}%
+        </text>
         {nodes.map(n => (
           <g key={n.l}>
-            <rect x={n.x - 24} y={n.y - 24} width={48} height={48} rx={5} fill="hsl(var(--surface-1))" stroke="hsl(var(--border))" />
-            <text x={n.x} y={n.y + 8} textAnchor="middle" fontSize="22">{n.e}</text>
-            <text x={n.x} y={n.y + 42} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">{n.l}</text>
+            <circle cx={n.x} cy={n.y} r={3.5} fill="hsl(var(--foreground))" />
+            <text x={n.x} y={n.y + 26} textAnchor="middle" fontSize="16" fontWeight={300} fill="hsl(var(--foreground))" style={{ fontFamily: 'IBM Plex Sans Hebrew' }}>{n.l}</text>
+            <text x={n.x} y={n.y - 12} textAnchor="middle" fontSize="10" fill="hsl(var(--muted-foreground))" style={{ fontFamily: 'IBM Plex Mono' }}>{n.k}</text>
           </g>
         ))}
       </svg>

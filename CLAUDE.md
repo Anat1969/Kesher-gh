@@ -12,8 +12,11 @@
 
 - "Level 999" is the default for every request, including "just give me a link": every delivery
   carries a full UI/UX and graphics upgrade, never the level-1 state as-is. (2026-10-26)
-- Design: depth, layers, gradients, shadows, motion (framer-motion); IBM Plex Sans Hebrew thin at
-  large sizes, IBM Plex Mono labels; no icons or decorative emoji in the tool chrome (card emoji are content).
+- Design must be sophisticated, never childish (2026-10-26, "הגרפיקה על הפנים"): editorial and
+  architectural, like a museum catalogue or a drawing set. No emoji anywhere in the UI (the cards are
+  words, set in type), no toy 3D, no glow, no bouncy springs, no saturated colours. Hairline rules,
+  restrained depth (one soft shadow), muted level colours, IBM Plex Sans Hebrew light/thin, IBM Plex
+  Mono numerals and labels, slow precise motion.
 - Fixed top bar on every page: app name links home, content nav, and the A&I logo button
   (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js, wrapper in `src/components/AIMenu.tsx`).
   Preferences (appearance, sound, haptics) live inside the A&I menu, never as loose buttons.

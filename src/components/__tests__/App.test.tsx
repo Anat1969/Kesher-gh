@@ -7,7 +7,7 @@ describe('App', () => {
 
   it('plays a connection end-to-end and finishes from the pause menu', async () => {
     render(<App />);
-    fireEvent.click(screen.getAllByRole('button', { name: 'התחילו לשחק' })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'התחלת משחק' })[0]);
 
     const cards = screen.getByRole('group', { name: 'כרטיסי המשחק' });
     expect(cards.querySelectorAll('button')).toHaveLength(25);
