@@ -20,3 +20,11 @@ globalThis.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 } as unknown as typeof ResizeObserver;
+
+// jsdom lacks IntersectionObserver, used by framer-motion's whileInView.
+globalThis.IntersectionObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() { return []; }
+} as unknown as typeof IntersectionObserver;

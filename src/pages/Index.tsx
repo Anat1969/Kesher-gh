@@ -1,16 +1,19 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import SplashScreen from '../components/SplashScreen';
 import GameScreen from '../components/GameScreen';
 import ResultsScreen from '../components/ResultsScreen';
-import { useGameState } from '../hooks/useGameState';
+import { useGame } from '../context/GameContext';
 
 const Index = () => {
-  const game = useGameState();
-  const { state, stats, settings, updateSettings } = game;
+  const game = useGame();
+  const { state, stats, settings, updateSettings, pause } = game;
   const knownSecrets = useMemo(() => new Set(stats.secrets), [stats.secrets]);
 
+  // Leaving the board for another page stops the clock.
+  useEffect(() => () => pause(), [pause]);
+
   if (state.screen === 'splash') {
-    return <SplashScreen stats={stats} settings={settings} onStart={game.startGame} onSettings={updateSettings} />;
+    return <SplashScreen stats={stats} onStart={game.startGame} />;
   }
 
   if (state.screen === 'results') {

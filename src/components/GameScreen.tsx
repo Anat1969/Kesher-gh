@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { Pause, Volume2, VolumeX } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ITEMS, LEVEL_NAMES, LEVEL_CSS_CLASSES, LEVEL_BG_CLASSES, LEVEL_ORDER, SCORE_VALUES, CHAIN_RATIO,
+  ITEMS, LEVEL_NAMES, LEVEL_BG_CLASSES, LEVEL_ORDER, SCORE_VALUES, CHAIN_RATIO, MILESTONES,
   levelColor, type Milestone,
 } from '../game/gameItems';
 import type { GameState } from '../game/engine';
@@ -10,7 +10,7 @@ import { isHandCraftedSecret, pairKey, suggestConnectionTypes } from '../game/ev
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import PauseDialog from './PauseDialog';
-import { ThemeIconButton } from './ThemeToggle';
+import AnimatedNumber from './AnimatedNumber';
 
 interface GameScreenProps {
   state: GameState;
@@ -28,18 +28,10 @@ interface GameScreenProps {
 }
 
 const COLS = 5;
+const TRACK_MAX = MILESTONES[MILESTONES.length - 1].pts;
 
 function formatTime(t: number) {
   return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
-}
-
-function Stat({ label, children, className = '' }: { label: string; children: React.ReactNode; className?: string }) {
-  return (
-    <div className="text-center min-w-[2.75rem]">
-      <div className="text-[0.6rem] text-muted-foreground tracking-wider">{label}</div>
-      <div className={`font-display font-bold leading-none tabular-nums ${className}`} dir="ltr">{children}</div>
-    </div>
-  );
 }
 
 export default function GameScreen({
@@ -60,15 +52,10 @@ export default function GameScreen({
     setExpanded(false);
     if (state.pendingChains.length === 0) return;
     setChainToast({ count: state.pendingChains.length, id: lastEval.id });
-    const t = setTimeout(() => setChainToast(null), 2200);
+    const t = setTimeout(() => setChainToast(null), 2400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per connection
   }, [lastEval?.id]);
-
-  const prevPts = currentMilestone?.pts ?? 0;
-  const milestonePercent = nextMilestone
-    ? Math.min(100, Math.round(((totalScore - prevPts) / (nextMilestone.pts - prevPts)) * 100))
-    : 100;
 
   const dotsFor = (idx: number) => state.directConns.filter(c => c.a === idx || c.b === idx).map(c => c.ev.lv);
 
@@ -83,298 +70,341 @@ export default function GameScreen({
     cardRefs.current[next]?.focus();
   };
 
-  const hint = state.currentCard === -1
-    ? 'בחרו כרטיס ראשון לפתיחת השרשרת'
-    : `${ITEMS[state.currentCard].e} ${ITEMS[state.currentCard].l} — בחרו את הכרטיס הבא · ${state.path.length}/${TOTAL_CARDS}`;
-
   const sodSuggestions = lastEval?.ev.lv === 's' ? suggestConnectionTypes(lastEval.a, lastEval.b) : [];
   const isNewSecret = !!lastEval && isHandCraftedSecret(lastEval.a, lastEval.b) && !knownSecrets.has(pairKey(lastEval.a, lastEval.b));
 
   const recent = [
     ...state.directConns.map((c, i) => ({ ...c, key: `d${i}` })),
     ...state.chainConns.map((c, i) => ({ ...c, key: `c${i}` })),
-  ].reverse().slice(0, 8);
+  ].reverse().slice(0, 10);
 
   return (
-    <div dir="rtl" className="flex flex-col h-[100dvh] w-full max-w-[640px] mx-auto bg-background overflow-hidden sm:border-x sm:border-border">
+    <div
+      className="mx-auto flex w-full max-w-[680px] flex-col gap-2.5 overflow-hidden px-3 pt-3"
+      style={{ height: 'calc(100dvh - var(--bar-h) - env(safe-area-inset-top))' }}
+    >
+      {/* HUD */}
+      <section className="panel flex-shrink-0 px-3 py-2.5 sm:px-4" aria-label="מצב המשחק">
+        <div className="flex items-center gap-3">
+          <Timer timeLeft={state.timeLeft} fraction={timeFraction} urgent={isUrgent} />
 
-      {/* ── HEADER ── */}
-      <header className="flex-shrink-0 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 border-b border-border bg-surface-1">
-        <div className="flex items-center justify-between gap-2 mb-1.5">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={onPause}
-              className="p-2 -m-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
-              aria-label="השהיה ותפריט"
-            >
-              <Pause className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => onSettings({ sound: !settings.sound })}
-              className="p-2 -m-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-surface-2 transition-colors"
-              aria-label={settings.sound ? 'השתקת צלילים' : 'הפעלת צלילים'}
-              aria-pressed={settings.sound}
-            >
-              {settings.sound ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-            </button>
-            <ThemeIconButton />
-            <div className="font-display text-xl font-bold text-foreground tracking-widest mr-1 hidden min-[360px]:block">קֶשֶׁר</div>
+          <div className="min-w-0 flex-1">
+            <div className="label-mono">ניקוד</div>
+            <AnimatedNumber value={totalScore} className="display-num block text-[2.6rem] text-foreground" />
           </div>
-          <div className="flex items-center gap-3" aria-live="off">
-            <Stat label="ניקוד" className="text-2xl text-foreground">
-              <span key={totalScore} className="inline-block animate-score-bump">{totalScore}</span>
-            </Stat>
-            <Stat label="שרשרת" className="text-xl text-foreground">+{state.chainScore}</Stat>
-            <Stat label="קשרים" className="text-2xl text-foreground">{state.directConns.length}</Stat>
-            <div
-              className="relative w-11 h-11 grid place-items-center"
-              role="timer"
-              aria-label={`זמן שנותר ${formatTime(state.timeLeft)}`}
-            >
-              <svg viewBox="0 0 36 36" className="absolute inset-0 -rotate-90" aria-hidden="true">
-                <circle cx="18" cy="18" r="16" fill="none" strokeWidth="2.5" style={{ stroke: 'hsl(var(--border))' }} />
-                <circle
-                  cx="18" cy="18" r="16" fill="none" strokeWidth={isUrgent ? 3.5 : 2.5} strokeLinecap="round"
-                  pathLength={100} strokeDasharray={`${timeFraction * 100} 100`}
-                  className="transition-[stroke-dasharray] duration-1000 ease-linear"
-                  style={{ stroke: 'hsl(var(--foreground))' }}
-                />
-              </svg>
-              <span
-                dir="ltr"
-                className={`font-display text-[0.8rem] font-bold tabular-nums text-foreground ${isUrgent ? 'animate-blink' : ''}`}
-              >
-                {formatTime(state.timeLeft)}
-              </span>
+
+          <dl className="flex gap-4 text-center">
+            <div>
+              <dt className="label-mono">קשרים</dt>
+              <dd className="display-num mt-1 text-2xl" dir="ltr">{state.directConns.length}</dd>
             </div>
-          </div>
+            <div>
+              <dt className="label-mono">שרשרת</dt>
+              <dd className="display-num mt-1 text-2xl text-chain" dir="ltr">+{state.chainScore}</dd>
+            </div>
+          </dl>
+
+          <button onClick={onPause} className="btn btn-ghost h-10 px-3 text-sm" aria-label="השהיה ותפריט">השהיה</button>
         </div>
 
-        {/* Milestone progress */}
-        <div className="flex items-center gap-2">
-          <div
-            className="flex-1 h-1 bg-border rounded-full overflow-hidden"
-            role="progressbar"
-            aria-label="התקדמות לאבן הדרך הבאה"
-            aria-valuenow={milestonePercent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${milestonePercent}%`, background: 'hsl(var(--foreground))' }}
-            />
-          </div>
-          <span className="font-display text-[0.7rem] font-bold text-foreground whitespace-nowrap">
-            {nextMilestone ? `${currentMilestone?.lbl ?? 'התחלה'} ← ${nextMilestone.lbl}` : '🏆 מאסטר!'}
-          </span>
-        </div>
-      </header>
+        <MilestoneTrack total={totalScore} current={currentMilestone} next={nextMilestone} />
+      </section>
 
-      {/* ── LEVEL LEGEND ── */}
-      <div className="flex-shrink-0 flex items-center justify-center flex-wrap gap-x-3 gap-y-1 px-3 py-1.5 border-b border-border bg-surface-1/70" aria-label="רמות קשר וניקוד">
+      {/* Legend */}
+      <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-1" aria-label="רמות קשר וניקוד">
         {LEVEL_ORDER.map(lv => (
-          <div key={lv} className="flex items-center gap-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${LEVEL_BG_CLASSES[lv]}`} />
-            <span className={`font-display text-[0.72rem] font-bold ${LEVEL_CSS_CLASSES[lv]}`}>{LEVEL_NAMES[lv]}</span>
-            <span className={`text-[0.65rem] font-bold ${LEVEL_CSS_CLASSES[lv]} opacity-70`}>{SCORE_VALUES[lv]}</span>
-          </div>
+          <span key={lv} className="flex items-center gap-1.5">
+            <span className={`h-1.5 w-1.5 rounded-full ${LEVEL_BG_CLASSES[lv]}`} />
+            <span className="text-[0.78rem] font-medium" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</span>
+            <span className="font-mono text-[0.68rem] text-muted-foreground">{SCORE_VALUES[lv]}</span>
+          </span>
         ))}
-        <div className="flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-chain" />
-          <span className="font-display text-[0.72rem] font-bold text-chain">שרשרת</span>
-          <span className="text-[0.65rem] font-bold text-chain opacity-70" dir="ltr">×{Math.round(CHAIN_RATIO * 100)}%</span>
-        </div>
+        <span className="flex items-center gap-1.5">
+          <span className="h-[2px] w-3 border-t border-dashed border-chain" />
+          <span className="text-[0.78rem] font-medium text-chain">שרשרת</span>
+          <span className="font-mono text-[0.68rem] text-muted-foreground" dir="ltr">{Math.round(CHAIN_RATIO * 100)}%</span>
+        </span>
       </div>
 
-      {/* ── GRID ── */}
-      <main className="flex-1 relative flex flex-col items-center justify-center overflow-hidden px-2 py-2 min-h-0">
-        <ConnectionLines
-          directConns={state.directConns}
-          chainConns={state.chainConns}
-          newestId={lastEval?.id ?? 0}
-        />
-
+      {/* Board */}
+      <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center">
         <div
-          role="group"
-          aria-label="כרטיסי המשחק"
-          onKeyDown={onGridKey}
-          className="grid grid-cols-5 relative z-[2] w-full max-w-[min(480px,calc((100dvh-22rem)*1.05))] min-w-[260px]"
-          style={{ gap: 'clamp(4px, 1.5vw, 8px)' }}
+          className="well relative w-full p-[clamp(6px,2vw,12px)]"
+          style={{ maxWidth: 'min(540px, calc((100dvh - var(--bar-h) - 23rem) * 1.02))', minWidth: '268px' }}
         >
-          {ITEMS.map((item, i) => {
-            const isActive = state.currentCard === i;
-            const inChain = state.path.includes(i);
-            const isUsed = inChain && !isActive;
-            const isDup = state.dupCard === i;
-            const order = inChain ? state.path.indexOf(i) + 1 : null;
-            const dots = dotsFor(i);
+          <ConnectionLines directConns={state.directConns} chainConns={state.chainConns} newestId={lastEval?.id ?? 0} />
 
-            return (
-              <button
-                key={i}
-                ref={el => (cardRefs.current[i] = el)}
-                data-card={i}
-                type="button"
-                onClick={() => onPick(i)}
-                aria-pressed={isActive}
-                aria-disabled={isUsed}
-                aria-label={`${item.l}${order ? `, מקום ${order} בשרשרת` : ''}${isActive ? ', הכרטיס הנוכחי' : ''}`}
-                style={{ animationDelay: `${i * 18}ms` }}
-                className={`card-enter aspect-square rounded-xl flex flex-col items-center justify-center relative select-none border
-                  transition-[transform,background-color,border-color,opacity,box-shadow] duration-150
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                  ${isActive
-                    ? 'border-foreground bg-foreground/[0.06] scale-[1.07] shadow-[0_6px_20px_hsl(var(--foreground)/0.14)] cursor-default'
-                    : isUsed
-                      ? 'bg-background/60 border-border/25 opacity-50 cursor-not-allowed'
-                      : 'bg-surface-2 border-border hover:border-foreground/40 hover:bg-surface-3 hover:-translate-y-0.5 active:scale-95 cursor-pointer'
-                  }
-                `}
-              >
-                {/* Keyed by dupId so the flash replays on every repeated tap. */}
-                {isDup && <span key={state.dupId} className="absolute inset-0 rounded-xl border border-transparent animate-dup-flash" aria-hidden="true" />}
-                <span className="absolute top-[3px] right-[3px] flex gap-[2px] flex-wrap max-w-[16px]" aria-hidden="true">
-                  {dots.map((lv, di) => (
-                    <span key={di} className={`w-[4px] h-[4px] rounded-full ${LEVEL_BG_CLASSES[lv]}`} />
-                  ))}
-                </span>
-                <span style={{ fontSize: 'clamp(1.15rem, 4.8vw, 1.75rem)' }} className="leading-none" aria-hidden="true">{item.e}</span>
-                <span style={{ fontSize: 'clamp(0.5rem, 1.7vw, 0.62rem)' }} className="text-muted-foreground font-medium mt-[3px] truncate max-w-full px-0.5" aria-hidden="true">
-                  {item.l}
-                </span>
-                {order && (
-                  <span
-                    className={`absolute bottom-0.5 left-1 font-display leading-none font-bold ${isActive ? 'text-foreground' : 'text-primary'}`}
-                    style={{ fontSize: 'clamp(0.5rem, 1.3vw, 0.65rem)' }}
-                    aria-hidden="true"
-                  >
-                    {order}
+          <div
+            role="group"
+            aria-label="כרטיסי המשחק"
+            onKeyDown={onGridKey}
+            className="relative z-[2] grid grid-cols-5"
+            style={{ gap: 'clamp(5px, 1.6vw, 10px)' }}
+          >
+            {ITEMS.map((item, i) => {
+              const isActive = state.currentCard === i;
+              const inChain = state.path.includes(i);
+              const isUsed = inChain && !isActive;
+              const isDup = state.dupCard === i;
+              const order = inChain ? state.path.indexOf(i) + 1 : null;
+              const dots = dotsFor(i);
+
+              return (
+                <motion.button
+                  key={i}
+                  ref={el => (cardRefs.current[i] = el)}
+                  data-card={i}
+                  type="button"
+                  onClick={() => onPick(i)}
+                  aria-pressed={isActive}
+                  aria-disabled={isUsed}
+                  aria-label={`${item.l}${order ? `, מקום ${order} בשרשרת` : ''}${isActive ? ', הכרטיס הנוכחי' : ''}`}
+                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                  animate={{ opacity: 1, y: isActive ? -4 : isUsed ? 2 : 0, scale: isActive ? 1.07 : 1 }}
+                  whileHover={isUsed || isActive ? undefined : { y: -3 }}
+                  whileTap={isUsed ? undefined : { scale: 0.94, y: 1 }}
+                  transition={{ type: 'spring', stiffness: 520, damping: 30, opacity: { delay: i * 0.015 }, y: { delay: 0 } }}
+                  className={`relative flex aspect-square select-none flex-col items-center justify-center rounded-[6px] border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    isActive ? 'animate-head-pulse z-[3] cursor-default border-foreground' : isUsed ? 'cursor-not-allowed border-transparent' : 'cursor-pointer border-border'
+                  }`}
+                  style={{
+                    background: isUsed
+                      ? 'linear-gradient(180deg, hsl(var(--surface-3) / 0.55), hsl(var(--surface-2) / 0.35))'
+                      : 'linear-gradient(160deg, hsl(var(--surface-1)), hsl(var(--surface-2)))',
+                    boxShadow: isActive
+                      ? '0 1px 0 hsl(var(--hi) / 0.9) inset, 0 4px 0 hsl(var(--edge)), 0 18px 30px -10px hsl(var(--shade) / 0.45)'
+                      : isUsed
+                        ? 'inset 0 1px 3px hsl(var(--shade) / 0.12)'
+                        : '0 1px 0 hsl(var(--hi) / 0.9) inset, 0 3px 0 hsl(var(--edge)), 0 6px 12px -6px hsl(var(--shade) / 0.25)',
+                  }}
+                >
+                  {isDup && <span key={state.dupId} className="animate-dup-flash absolute inset-0 rounded-[6px] border-2 border-foreground/60" aria-hidden="true" />}
+                  <span className="absolute right-[4px] top-[4px] flex max-w-[18px] flex-wrap gap-[2px]" aria-hidden="true">
+                    {dots.map((lv, di) => <span key={di} className={`h-[4px] w-[4px] rounded-full ${LEVEL_BG_CLASSES[lv]}`} />)}
                   </span>
-                )}
-              </button>
-            );
-          })}
+                  <span
+                    aria-hidden="true"
+                    className="leading-none transition-[filter,opacity] duration-300"
+                    style={{ fontSize: 'clamp(1.2rem, 5vw, 1.9rem)', filter: isUsed ? 'grayscale(0.75)' : undefined, opacity: isUsed ? 0.5 : 1 }}
+                  >
+                    {item.e}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`mt-[4px] max-w-full truncate px-0.5 font-medium ${isUsed ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}
+                    style={{ fontSize: 'clamp(0.52rem, 1.7vw, 0.68rem)' }}
+                  >
+                    {item.l}
+                  </span>
+                  {order && (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute bottom-[3px] left-[5px] font-mono leading-none ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}
+                      style={{ fontSize: 'clamp(0.5rem, 1.3vw, 0.62rem)' }}
+                    >
+                      {order}
+                    </span>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+
+          <AnimatePresence>
+            {chainToast && (
+              <motion.div
+                key={chainToast.id}
+                role="status"
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="absolute left-1/2 top-2 z-[30] -translate-x-1/2 whitespace-nowrap rounded-full border border-chain/40 px-4 py-1.5 text-sm font-medium text-chain backdrop-blur-md"
+                style={{ background: 'hsl(var(--surface-1) / 0.85)', boxShadow: 'var(--shadow-md)' }}
+              >
+                {chainToast.count === 1 ? 'נחשף חיבור שרשרת' : `נחשפו ${chainToast.count} חיבורי שרשרת`}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {chainToast && (
-          <div
-            key={chainToast.id}
-            role="status"
-            className="absolute top-2 left-1/2 -translate-x-1/2 bg-chain/15 border border-chain/40 rounded-full px-4 py-1.5 text-sm font-bold text-chain z-[300] backdrop-blur-md whitespace-nowrap animate-in fade-in slide-in-from-top-3 duration-300"
-          >
-            ⛓ {chainToast.count === 1 ? 'חיבור שרשרת חדש!' : `${chainToast.count} חיבורי שרשרת!`}
-          </div>
-        )}
-
-        <p className="mt-2 z-[5] text-[0.72rem] text-muted-foreground text-center px-2">{hint}</p>
+        <p className="mt-2 text-center text-[0.78rem] text-muted-foreground">
+          {state.currentCard === -1
+            ? 'בחרו כרטיס ראשון כדי לפתוח את השרשרת'
+            : <>הכרטיס הנוכחי: <span className="font-medium text-foreground">{ITEMS[state.currentCard].l}</span>. בחרו את הבא <span className="font-mono" dir="ltr">{state.path.length}/{TOTAL_CARDS}</span></>}
+        </p>
       </main>
 
-      {/* ── EVALUATION PANEL ── */}
+      {/* Evaluation sheet */}
       <section
-        className="flex-shrink-0 border-t border-border bg-surface-1 pb-[env(safe-area-inset-bottom)]"
+        className="panel relative mb-[max(0.75rem,env(safe-area-inset-bottom))] flex-shrink-0 overflow-hidden"
         aria-live="polite"
         aria-atomic="true"
       >
-        {lastEval ? (
-          <div key={lastEval.id} className="px-3 py-2 animate-eval-in">
-            <div className="flex items-start gap-3">
-              <div className="flex flex-col items-center flex-shrink-0 pt-0.5">
-                <div className="text-2xl leading-none mb-0.5" aria-hidden="true">
-                  {ITEMS[lastEval.a].e}{ITEMS[lastEval.b].e}
-                </div>
-                <div className="font-display text-xl font-black" style={{ color: levelColor(lastEval.ev.lv) }} dir="ltr">
-                  +{lastEval.ev.sc}
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                  <span
-                    className="inline-flex items-center px-2 py-0.5 rounded-full font-display text-[0.75rem] font-bold border"
-                    style={{
-                      background: levelColor(lastEval.ev.lv, 0.13),
-                      color: levelColor(lastEval.ev.lv),
-                      borderColor: levelColor(lastEval.ev.lv, 0.3),
-                    }}
-                  >
-                    {LEVEL_NAMES[lastEval.ev.lv]}
-                  </span>
-                  {isNewSecret && (
-                    <span className="text-[0.68rem] font-bold text-level-sod animate-in zoom-in duration-300">✨ סוד חדש נחשף!</span>
-                  )}
-                  <span className="sr-only">{ITEMS[lastEval.a].l} ו{ITEMS[lastEval.b].l}:</span>
-                  <span className="text-[0.7rem] text-muted-foreground truncate">{lastEval.ev.sub}</span>
-                </div>
-                {sodSuggestions.length > 0 && (
-                  <div className="flex gap-1 flex-wrap mb-1 items-center">
-                    <span className="text-[0.62rem] text-muted-foreground">אולי חשבתם על:</span>
-                    {sodSuggestions.map(s => (
-                      <span
-                        key={s}
-                        className="text-[0.62rem] px-1.5 py-0.5 rounded-full border"
-                        style={{ borderColor: levelColor('s', 0.25), color: levelColor('s', 0.85), background: levelColor('s', 0.06) }}
-                      >
-                        {s}
-                      </span>
-                    ))}
+        <AnimatePresence mode="wait" initial={false}>
+          {lastEval ? (
+            <motion.div
+              key={lastEval.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.8, 0.2, 1] }}
+              className="relative px-4 py-3"
+            >
+              <span className="absolute inset-y-0 right-0 w-1" style={{ background: levelColor(lastEval.ev.lv) }} />
+              <div className="flex items-start gap-3">
+                <div className="flex flex-shrink-0 flex-col items-center gap-1 pt-0.5">
+                  <div className="flex items-center gap-1 text-[1.6rem] leading-none" aria-hidden="true">
+                    <span>{ITEMS[lastEval.a].e}</span>
+                    <span className="h-px w-3" style={{ background: levelColor(lastEval.ev.lv) }} />
+                    <span>{ITEMS[lastEval.b].e}</span>
                   </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setExpanded(v => !v)}
-                  aria-expanded={expanded}
-                  className="text-right w-full text-[0.74rem] leading-relaxed text-foreground rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <span className={expanded ? '' : 'line-clamp-2'}>{lastEval.ev.exp}</span>
-                  {!expanded && <span className="text-[0.65rem] text-muted-foreground"> הרחבה ▾</span>}
-                </button>
+                  <div className="display-num text-3xl" style={{ color: levelColor(lastEval.ev.lv) }} dir="ltr">+{lastEval.ev.sc}</div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                    <span className="text-xl font-light" style={{ color: levelColor(lastEval.ev.lv) }}>{LEVEL_NAMES[lastEval.ev.lv]}</span>
+                    {isNewSecret && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="rounded-full border px-2 py-0.5 text-[0.7rem] font-medium"
+                        style={{ color: levelColor('s'), borderColor: levelColor('s', 0.4), background: levelColor('s', 0.08) }}
+                      >
+                        סוד חדש נחשף
+                      </motion.span>
+                    )}
+                    <span className="sr-only">{ITEMS[lastEval.a].l} ו{ITEMS[lastEval.b].l}:</span>
+                    <span className="truncate text-[0.78rem] text-muted-foreground">{lastEval.ev.sub}</span>
+                  </div>
+                  {sodSuggestions.length > 0 && (
+                    <div className="mb-1 flex flex-wrap items-center gap-1">
+                      <span className="label-mono">אולי חשבתם על</span>
+                      {sodSuggestions.map(s => (
+                        <span key={s} className="rounded-full border px-1.5 py-0.5 text-[0.65rem]"
+                          style={{ borderColor: levelColor('s', 0.25), color: levelColor('s'), background: levelColor('s', 0.06) }}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(v => !v)}
+                    aria-expanded={expanded}
+                    className="w-full rounded text-right text-[0.82rem] leading-relaxed text-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className={expanded ? '' : 'line-clamp-2'}>{lastEval.ev.exp}</span>
+                    <span className="label-mono mt-0.5 block">{expanded ? 'צמצום' : 'קריאה מלאה'}</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        ) : (
-          <div className="px-3 py-3 text-center text-muted-foreground text-sm">
-            לחצו על <strong className="text-foreground">שני כרטיסים</strong> כדי לגלות את הקשר ביניהם
-          </div>
-        )}
+            </motion.div>
+          ) : (
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-4 py-4 text-center text-sm text-muted-foreground">
+              לחצו על <span className="font-medium text-foreground">שני כרטיסים</span> כדי לגלות את הקשר ביניהם
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {recent.length > 0 && (
-          <ul className="flex gap-1.5 px-3 pb-2 overflow-x-auto scrollbar-none" aria-label="קשרים אחרונים">
+          <ul className="scrollbar-none flex gap-1.5 overflow-x-auto border-t border-border px-3 py-2" aria-label="קשרים אחרונים">
             {recent.map(c => (
-              <li
+              <motion.li
                 key={c.key}
-                className={`flex-shrink-0 flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-2 border animate-log-in ${c.isChain ? 'border-chain/30' : 'border-border'}`}
+                layout
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`flex flex-shrink-0 items-center gap-1 rounded border bg-surface-1 px-2 py-0.5 ${c.isChain ? 'border-dashed border-chain/50' : 'border-border'}`}
               >
-                <span className="text-[0.85rem]" aria-label={`${ITEMS[c.a].l} ו${ITEMS[c.b].l}`}>{ITEMS[c.a].e}{ITEMS[c.b].e}</span>
-                <span dir="ltr" className={`font-display text-[0.65rem] font-bold ${c.isChain ? 'text-chain' : LEVEL_CSS_CLASSES[c.ev.lv]}`}>
+                <span className="text-[0.9rem]" aria-label={`${ITEMS[c.a].l} ו${ITEMS[c.b].l}`}>{ITEMS[c.a].e}{ITEMS[c.b].e}</span>
+                <span dir="ltr" className="font-mono text-[0.66rem]" style={{ color: c.isChain ? 'hsl(var(--chain))' : levelColor(c.ev.lv) }}>
                   +{c.isChain ? c.bonus : c.ev.sc}
                 </span>
-              </li>
+              </motion.li>
             ))}
           </ul>
         )}
       </section>
 
-      {/* ── SCORE POPUP ── */}
-      {lastEval && (
-        <div
-          key={`pop${lastEval.id}`}
-          aria-hidden="true"
-          className="fixed z-[2000] pointer-events-none font-display text-5xl font-black animate-score-float left-1/2 top-[38%]"
-          style={{ color: levelColor(lastEval.ev.lv), textShadow: `0 0 24px ${levelColor(lastEval.ev.lv, 0.5)}, 0 2px 12px rgba(0,0,0,0.6)` }}
-          dir="ltr"
-        >
-          +{lastEval.ev.sc}
-        </div>
-      )}
+      {/* Score popup */}
+      <AnimatePresence>
+        {lastEval && (
+          <motion.div
+            key={`pop${lastEval.id}`}
+            aria-hidden="true"
+            className="display-num pointer-events-none fixed left-1/2 top-[42%] z-[60] text-6xl"
+            style={{ color: levelColor(lastEval.ev.lv), textShadow: `0 0 28px ${levelColor(lastEval.ev.lv, 0.55)}`, x: '-50%' }}
+            initial={{ opacity: 0, y: 0, scale: 0.7 }}
+            animate={{ opacity: [0, 1, 1, 0], y: [0, -16, -60, -90], scale: [0.7, 1.15, 1, 0.9] }}
+            transition={{ duration: 1.3, times: [0, 0.15, 0.8, 1], ease: 'easeOut' }}
+            dir="ltr"
+          >
+            +{lastEval.ev.sc}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <PauseDialog
-        open={state.paused}
-        settings={settings}
-        onResume={onResume}
-        onFinish={onFinish}
-        onMenu={onMenu}
-        onSettings={onSettings}
-      />
+      <PauseDialog open={state.paused} settings={settings} onResume={onResume} onFinish={onFinish} onMenu={onMenu} onSettings={onSettings} />
+    </div>
+  );
+}
+
+function Timer({ timeLeft, fraction, urgent }: { timeLeft: number; fraction: number; urgent: boolean }) {
+  return (
+    <div className="relative grid h-[58px] w-[58px] flex-shrink-0 place-items-center" role="timer" aria-label={`זמן שנותר ${formatTime(timeLeft)}`}>
+      <div className="well absolute inset-[5px] rounded-full" />
+      <svg viewBox="0 0 40 40" className="absolute inset-0 -rotate-90" aria-hidden="true">
+        {Array.from({ length: 30 }, (_, k) => {
+          const a = (k / 30) * Math.PI * 2;
+          return <line key={k} x1={20 + Math.cos(a) * 18.6} y1={20 + Math.sin(a) * 18.6} x2={20 + Math.cos(a) * 19.6} y2={20 + Math.sin(a) * 19.6} strokeWidth={0.6} style={{ stroke: 'hsl(var(--border))' }} />;
+        })}
+        <circle cx="20" cy="20" r="17" fill="none" strokeWidth="1.6" style={{ stroke: 'hsl(var(--border))' }} />
+        <circle
+          cx="20" cy="20" r="17" fill="none" strokeWidth={urgent ? 2.6 : 1.8} strokeLinecap="round"
+          pathLength={100} strokeDasharray={`${fraction * 100} 100`}
+          className="transition-[stroke-dasharray] duration-1000 ease-linear"
+          style={{ stroke: 'hsl(var(--foreground))' }}
+        />
+      </svg>
+      <span dir="ltr" className={`relative font-mono text-[0.82rem] font-medium tabular-nums text-foreground ${urgent ? 'animate-blink' : ''}`}>
+        {formatTime(timeLeft)}
+      </span>
+    </div>
+  );
+}
+
+function MilestoneTrack({ total, current, next }: { total: number; current: Milestone | undefined; next: Milestone | undefined }) {
+  const pct = Math.min(100, (total / TRACK_MAX) * 100);
+  return (
+    <div className="mt-2.5">
+      <div
+        className="well relative h-2 overflow-visible rounded-full"
+        role="progressbar"
+        aria-label="התקדמות באבני הדרך"
+        aria-valuenow={total}
+        aria-valuemin={0}
+        aria-valuemax={TRACK_MAX}
+      >
+        <motion.div
+          className="absolute inset-y-0 right-0 rounded-full"
+          style={{ background: 'linear-gradient(270deg, hsl(var(--foreground) / 0.55), hsl(var(--foreground)))' }}
+          initial={false}
+          animate={{ width: `${pct}%` }}
+          transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+        />
+        {MILESTONES.map(m => (
+          <span
+            key={m.pts}
+            className={`absolute top-1/2 h-3 w-[2px] -translate-y-1/2 rounded-full ${m.pts <= total ? 'bg-background' : 'bg-foreground/25'}`}
+            style={{ right: `${(m.pts / TRACK_MAX) * 100}%` }}
+            aria-hidden="true"
+          />
+        ))}
+      </div>
+      <div className="mt-1.5 flex items-center justify-between">
+        <span className="label-mono">{current?.lbl ?? 'התחלה'}</span>
+        <span className="label-mono">{next ? <>הבא: {next.lbl} <span dir="ltr">{next.pts}</span></> : 'מאסטר'}</span>
+      </div>
     </div>
   );
 }

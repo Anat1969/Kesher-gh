@@ -12,6 +12,15 @@ export default {
       screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        sans: ['"IBM Plex Sans Hebrew"', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

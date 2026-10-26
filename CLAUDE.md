@@ -8,6 +8,17 @@
   features and best practices. Do this proactively in every session, without being asked again.
 - The owner has many projects following this same workflow.
 
+## Owner corrections (apply every session)
+
+- "Level 999" is the default for every request, including "just give me a link": every delivery
+  carries a full UI/UX and graphics upgrade, never the level-1 state as-is. (2026-10-26)
+- Design: depth, layers, gradients, shadows, motion (framer-motion); IBM Plex Sans Hebrew thin at
+  large sizes, IBM Plex Mono labels; no icons or decorative emoji in the tool chrome (card emoji are content).
+- Fixed top bar on every page: app name links home, content nav, and the A&I logo button
+  (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js, wrapper in `src/components/AIMenu.tsx`).
+  Preferences (appearance, sound, haptics) live inside the A&I menu, never as loose buttons.
+- Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
+
 ## What "upgrade" means here
 
 Work through these areas, highest impact first, and verify each change (lint, typecheck, tests, build):
@@ -36,7 +47,8 @@ Relevant skills to use: `engineering:code-review`, `engineering:testing-strategy
 
 ## Lovable compatibility rules
 
-- Lovable syncs the default branch; do the upgrade work on a feature branch and let the owner merge.
+- Lovable syncs the default branch; do the upgrade work on a feature branch, open a PR and merge it
+  after green checks (the owner gave standing approval). Vercel deploys main to https://kesher-gh.vercel.app
 - Keep the Lovable stack intact (Vite + React + TypeScript + Tailwind + shadcn/ui) so the
   project can keep being edited in Lovable after the upgrade.
 - Don't rename/move core entry files (`index.html`, `src/main.tsx`, `src/App.tsx`).
