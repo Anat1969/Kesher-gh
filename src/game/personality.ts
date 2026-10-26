@@ -7,6 +7,11 @@ export interface Connection {
   b: number;
   ev: Evaluation;
   isChain?: boolean;
+  /** Key of the reading the player said they meant, and its level. */
+  meant?: string;
+  meantLv?: Level;
+  /** The player's own words for the connection. */
+  note?: string;
   bonus?: number;
   bridge?: number;
 }
@@ -24,7 +29,8 @@ export interface PersonalityResult {
 
 export function analyzePersonality(directConns: Connection[], chainConns: Connection[]): PersonalityResult {
   const cnt: Record<Level, number> = { p: 0, r: 0, d: 0, s: 0 };
-  directConns.forEach(c => cnt[c.ev.lv]++);
+  // The thinking profile follows what the player meant, when they told us.
+  directConns.forEach(c => cnt[c.meantLv ?? c.ev.lv]++);
   const total = directConns.length || 1;
   const ratios = { p: cnt.p / total, r: cnt.r / total, d: cnt.d / total, s: cnt.s / total };
   const deepRatio = (cnt.d + cnt.s) / total;

@@ -4,7 +4,7 @@ import { LEVEL_NAMES, LEVEL_ORDER, SCORE_VALUES, levelColor, CHAIN_RATIO } from 
 import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { SECRET_KEYS } from '../game/evaluator';
 import type { Stats } from '../lib/storage';
-import { LEVEL_INFO } from '../game/levelInfo';
+import { LEVEL_DEFS } from '../game/levelInfo';
 import BoardHero from './BoardHero';
 
 interface SplashScreenProps {
@@ -99,8 +99,9 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
               <span className="num-mono text-sm text-muted-foreground" dir="ltr" style={{ textAlign: 'right' }}>0{i + 1}</span>
               <span className="text-3xl font-extralight" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</span>
               <div className="col-span-3 col-start-2 row-start-2 sm:col-span-1 sm:col-start-auto sm:row-start-auto">
-                <div className="text-base font-normal">{LEVEL_INFO[lv].title}</div>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{LEVEL_INFO[lv].desc}. {LEVEL_INFO[lv].examples}</p>
+                <div className="text-base font-normal">{LEVEL_DEFS[lv].title}</div>
+                <p className="mt-1 text-sm leading-relaxed text-foreground/80">{LEVEL_DEFS[lv].definition}</p>
+                <p className="mt-1.5 text-[0.8rem] text-muted-foreground">מבחן: {LEVEL_DEFS[lv].test}</p>
               </div>
               <span className="col-start-3 row-start-1 text-left sm:col-start-auto sm:row-start-auto">
                 <span className="display-num text-3xl" dir="ltr">{SCORE_VALUES[lv]}</span>

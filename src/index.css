@@ -98,6 +98,10 @@
 @media (min-width: 768px) {
   :root { --bar-h: 3.5rem; }
 }
+:root { --board-chrome: 22rem; }
+@media (min-width: 1024px) {
+  :root { --board-chrome: 14rem; }
+}
 
 @layer base {
   * {

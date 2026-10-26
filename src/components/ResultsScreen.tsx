@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, MILESTONES, levelColor, type Level } from '../game/gameItems';
 import { analyzePersonality, type Connection } from '../game/personality';
-import { SECRET_KEYS } from '../game/evaluator';
+import { SECRET_KEYS, readingsFor } from '../game/evaluator';
 import type { RecordResult, Stats } from '../lib/storage';
 import { buildShareText, shareText, type ShareOutcome } from '../lib/share';
 import ConnectionLines from './ConnectionLines';
@@ -87,6 +87,11 @@ export default function ResultsScreen({
     setShareState(await shareText(text));
     setTimeout(() => setShareState(null), 2500);
   };
+
+  const meantSub = (c: Connection) =>
+    c.meant && c.meant !== readingsFor(c.a, c.b)[0]?.key
+      ? readingsFor(c.a, c.b).find(r => r.key === c.meant)?.sub.replace(/^[^—]*—\s*/, '')
+      : undefined;
 
   let n = 0;
   const next = () => String(++n).padStart(2, '0');
@@ -229,6 +234,8 @@ export default function ResultsScreen({
                           <span className="truncate text-xs" style={{ color }}>{c.isChain ? 'שרשרת · ' : ''}{c.ev.sub}</span>
                         </div>
                         <div className={`mt-0.5 text-xs text-muted-foreground ${openLog === i ? 'leading-relaxed' : 'truncate'}`}>{c.ev.exp}</div>
+                        {meantSub(c) && <div className="mt-1 text-xs"><span className="label-mono">התכוונתם · </span>{meantSub(c)}</div>}
+                        {c.note && <div className="mt-1 text-xs"><span className="label-mono">הקשר שלכם · </span>{c.note}</div>}
                       </div>
                       <span dir="ltr" className="num-mono text-xs" style={{ color }}>+{c.isChain ? c.bonus : c.ev.sc}</span>
                     </button>

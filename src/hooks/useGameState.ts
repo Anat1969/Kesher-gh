@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { MILESTONES } from '../game/gameItems';
+import { MILESTONES, type Level } from '../game/gameItems';
 import { gameReducer, initialState, totalScore as sumScore } from '../game/engine';
 import { isHandCraftedSecret, pairKey } from '../game/evaluator';
 import { analyzePersonality } from '../game/personality';
@@ -86,6 +86,10 @@ export function useGameState() {
   const pause = useCallback(() => dispatch({ type: 'pause' }), []);
   const resume = useCallback(() => dispatch({ type: 'resume' }), []);
   const finish = useCallback(() => dispatch({ type: 'finish' }), []);
+  const annotate = useCallback(
+    (index: number, patch: { meant?: string; meantLv?: Level; note?: string }) => dispatch({ type: 'annotate', index, ...patch }),
+    [],
+  );
   const pick = useCallback((card: number) => {
     if (state.currentCard === -1 && !state.path.includes(card)) feedback(sounds.select, 8);
     dispatch({ type: 'pick', card });
@@ -118,6 +122,7 @@ export function useGameState() {
     pause,
     resume,
     finish,
+    annotate,
     pick,
     updateSettings,
   };

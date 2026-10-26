@@ -3,10 +3,8 @@ import { motion } from 'framer-motion';
 import { LEVEL_NAMES, LEVEL_ORDER, SCORE_VALUES, MILESTONES, CHAIN_RATIO, ITEMS, levelColor } from '../game/gameItems';
 import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { evaluate } from '../game/evaluator';
-import { LEVEL_INFO } from '../game/levelInfo';
+import { LEVEL_DEFS } from '../game/levelInfo';
 import { useGame } from '../context/GameContext';
-
-const EXAMPLES: Record<string, [number, number]> = { p: [8, 12], r: [1, 7], d: [11, 12], s: [0, 10] };
 
 const STEPS = [
   { title: 'פותחים שרשרת', body: 'בוחרים מילה ראשונה. היא ראש השרשרת.' },
@@ -67,22 +65,49 @@ export default function Guide() {
         <Heading n="02" kicker="ארבע הרמות" title="מהגלוי אל הנסתר" />
         <div>
           {LEVEL_ORDER.map((lv, i) => {
-            const [a, b] = EXAMPLES[lv];
+            const def = LEVEL_DEFS[lv];
+            const [a, b] = def.example;
             const ev = evaluate(a, b);
             return (
-              <motion.article key={lv} {...inView(i * 0.05)} className="grid grid-cols-[minmax(0,1fr)] gap-4 border-b border-border py-8 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10">
+              <motion.article key={lv} {...inView(i * 0.05)} className="grid grid-cols-[minmax(0,1fr)] gap-5 border-b border-border py-10 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10">
                 <div>
                   <span className="num-mono text-sm text-muted-foreground">0{i + 1}</span>
-                  <h3 className="mt-1 text-4xl font-extralight" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</h3>
-                  <div className="mt-2 flex items-baseline gap-1.5">
+                  <h3 className="mt-1 text-5xl font-extralight" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</h3>
+                  <div className="mt-1 text-base">{def.title}</div>
+                  <div className="mt-3 flex items-baseline gap-1.5">
                     <span className="display-num text-2xl" dir="ltr">{SCORE_VALUES[lv]}</span>
                     <span className="label-mono">נקודות</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-lg font-normal">{LEVEL_INFO[lv].title}</div>
-                  <p className="mt-1 text-sm text-muted-foreground">{LEVEL_INFO[lv].desc}. {LEVEL_INFO[lv].examples}</p>
-                  <blockquote className="mt-5 border-r pr-4" style={{ borderColor: levelColor(lv) }}>
+                  <dl className="grid grid-cols-[minmax(0,1fr)] gap-4">
+                    <div>
+                      <dt className="label-mono mb-1">הגדרה</dt>
+                      <dd className="text-xl font-light leading-snug">{def.definition}</dd>
+                    </div>
+                    <div className="border-r-2 pr-3" style={{ borderColor: levelColor(lv) }}>
+                      <dt className="label-mono mb-1">שאלת המבחן</dt>
+                      <dd className="text-base">{def.test}</dd>
+                    </div>
+                    <div>
+                      <dt className="label-mono mb-1.5">סימנים</dt>
+                      <dd>
+                        <ul className="space-y-1">
+                          {def.signs.map(sg => (
+                            <li key={sg} className="flex items-baseline gap-2.5 text-sm">
+                              <span className="h-px w-3 flex-shrink-0 translate-y-[-3px]" style={{ background: levelColor(lv) }} />
+                              {sg}
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="label-mono mb-1">מה זה לא</dt>
+                      <dd className="text-sm text-muted-foreground">{def.notThis}</dd>
+                    </div>
+                  </dl>
+                  <blockquote className="well mt-5 p-4">
                     <div className="label-mono mb-1.5">דוגמה · {ITEMS[a].l} ו{ITEMS[b].l}</div>
                     <p className="text-sm leading-relaxed text-foreground/85">{ev.exp}</p>
                   </blockquote>
@@ -93,9 +118,26 @@ export default function Guide() {
         </div>
       </section>
 
+      <section aria-labelledby="grading-title" className="mt-20">
+        <Heading n="03" kicker="איך נקבעת הדרגה" title="קריאות, ולא תשובה אחת" />
+        <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-3">
+          {[
+            { t: 'כמה קריאות לכל זוג', b: 'המערכת קוראת כל זוג בכל הצירים: תכונה גלויה, סמל, עיקרון, אנלוגיה, פרדוקס ותגלית. כל ציר נותן קריאה בדרגה אחרת.' },
+            { t: 'הדרגה היא העמוקה המוצדקת', b: 'הניקוד ניתן לפי הקריאה העמוקה ביותר שעומדת בשאלת המבחן של הדרגה שלה. ליד כל קריאה מופיע הנימוק.' },
+            { t: 'אתם מחליטים למה התכוונתם', b: 'אם ראיתם קשר אחר, בחרו אותו או כתבו אותו במילים שלכם. הניקוד לא יורד, והבחירה שלכם קובעת את פרופיל סגנון החשיבה.' },
+          ].map((x, i) => (
+            <motion.div key={x.t} {...inView(i * 0.06)} className="border-t border-border pt-4">
+              <span className="num-mono text-sm text-muted-foreground" dir="ltr">{String(i + 1).padStart(2, '0')}</span>
+              <h3 className="mt-1 text-xl font-light">{x.t}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{x.b}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
       <section className="mt-20 grid grid-cols-[minmax(0,1fr)] gap-14 md:grid-cols-2 md:gap-10">
         <motion.div {...inView()}>
-          <Heading n="03" kicker="בונוס" title="חיבורי שרשרת" />
+          <Heading n="04" kicker="בונוס" title="חיבורי שרשרת" />
           <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
             חיבור א׳ לב׳ ואז ב׳ לג׳ חושף גם את הקשר הסמוי בין א׳ לג׳. הוא מצטרף לניקוד בשווי
             <span className="text-foreground"> {Math.round(CHAIN_RATIO * 100)}% </span>
@@ -103,7 +145,7 @@ export default function Guide() {
           </p>
         </motion.div>
         <motion.div {...inView(0.06)}>
-          <Heading n="04" kicker="סולם" title="אבני דרך" />
+          <Heading n="05" kicker="סולם" title="אבני דרך" />
           <ol>
             {MILESTONES.map(m => (
               <li key={m.pts} className="flex items-baseline justify-between border-b border-border py-2.5 text-sm">
@@ -117,11 +159,11 @@ export default function Guide() {
 
       <section className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-14 md:grid-cols-2 md:gap-10">
         <motion.div {...inView()}>
-          <Heading n="05" kicker="מקלדת" title="משחק בלי עכבר" />
+          <Heading n="06" kicker="מקלדת" title="משחק בלי עכבר" />
           <p className="mt-5 text-sm leading-relaxed text-muted-foreground">Tab עובר אל הלוח, החצים זזים בין המילים, Enter בוחר. Escape סוגר את חלון ההשהיה.</p>
         </motion.div>
         <motion.div {...inView(0.06)}>
-          <Heading n="06" kicker="עצה" title="לחשוב בתהליכים" />
+          <Heading n="07" kicker="עצה" title="לחשוב בתהליכים" />
           <p className="mt-5 text-sm leading-relaxed text-muted-foreground">צבע וצורה נותנים פשט. תהליך משותף, כמו צמיחה, לחץ או מחזוריות, מוביל לדרש. סתירה שמתגלה כאמת היא כמעט תמיד סוד.</p>
         </motion.div>
       </section>

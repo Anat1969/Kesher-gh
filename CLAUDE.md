@@ -20,6 +20,12 @@
 - Fixed top bar on every page: app name links home, content nav, and the A&I logo button
   (`<ai-menu>` from https://appofapp-gh.vercel.app/ai-menu.js, wrapper in `src/components/AIMenu.tsx`).
   Preferences (appearance, sound, haptics) live inside the A&I menu, never as loose buttons.
+- Content (2026-10-26): every explanation is pair-specific, built from `src/game/lexicon.ts`
+  (essence, process, paradox and a line per tag for each card). A level is awarded only when its
+  definition in `src/game/levelInfo.ts` is met, and each reading states why ("למה דרש?").
+  Sod only for a documented secret or a shared paradox, never as a fallback. Show the alternative
+  readings and let the player say what they meant or write their own; that shapes the thinking
+  profile, never the score. Facts in hand-crafted readings must be checked (names, dates, numbers).
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## What "upgrade" means here

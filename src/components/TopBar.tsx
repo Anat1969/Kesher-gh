@@ -4,9 +4,10 @@ import { useGame } from '../context/GameContext';
 import AIMenu from './AIMenu';
 
 const NAV = [
-  { to: '/', label: 'משחק', end: true },
-  { to: '/guide', label: 'מדריך', end: false },
-  { to: '/secrets', label: 'אוסף הסודות', end: false },
+  { to: '/', label: 'משחק', short: 'משחק', end: true },
+  { to: '/guide', label: 'מדריך', short: 'מדריך', end: false },
+  { to: '/secrets', label: 'אוסף הסודות', short: 'סודות', end: false },
+  { to: '/did-you-know', label: 'הידעת', short: 'הידעת', end: false },
 ] as const;
 
 /** Fixed top bar on every page: app name (home), content navigation, and the A&I button. */
@@ -45,7 +46,7 @@ export default function TopBar() {
   );
 }
 
-function NavItem({ to, label, end }: { to: string; label: string; end: boolean }) {
+function NavItem({ to, label, short, end }: { to: string; label: string; short: string; end: boolean }) {
   return (
     <NavLink
       to={to}
@@ -58,7 +59,8 @@ function NavItem({ to, label, end }: { to: string; label: string; end: boolean }
     >
       {({ isActive }) => (
         <>
-          {label}
+          <span className="md:hidden">{short}</span>
+          <span className="hidden md:inline">{label}</span>
           {isActive && (
             <motion.span
               layoutId="nav-underline"
