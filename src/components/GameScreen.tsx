@@ -9,6 +9,7 @@ import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { isHandCraftedSecret, pairKey, readingsFor } from '../game/evaluator';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ReadingPanel from './ReadingPanel';
+import Glyph from './Glyph';
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import PauseDialog from './PauseDialog';
@@ -207,12 +208,20 @@ export default function GameScreen({
                     )}
                   </span>
 
-                  <span
-                    aria-hidden="true"
-                    className={`block truncate text-center leading-none ${isActive ? 'font-normal' : 'font-light'}`}
-                    style={{ fontSize: 'clamp(0.74rem, 3.3vw, 1.08rem)' }}
-                  >
-                    {item.l}
+                  <span aria-hidden="true" className="flex min-h-0 flex-col items-center gap-[clamp(2px,0.6vw,5px)]">
+                    <Glyph
+                      i={i}
+                      size="100%"
+                      strokeWidth={isActive ? 1.4 : 1.2}
+                      className={`aspect-square transition-opacity ${isUsed ? 'opacity-45' : ''}`}
+                      style={{ width: 'clamp(18px, 6vw, 34px)', height: 'auto' }}
+                    />
+                    <span
+                      className={`block max-w-full truncate text-center leading-none ${isActive ? 'font-normal' : 'font-light'}`}
+                      style={{ fontSize: 'clamp(0.66rem, 2.9vw, 0.98rem)' }}
+                    >
+                      {item.l}
+                    </span>
                   </span>
 
                   <span className="flex h-[2px] gap-[2px]" aria-hidden="true">
@@ -265,8 +274,8 @@ export default function GameScreen({
               <div className="flex items-baseline justify-between gap-3">
                 <div className="flex min-w-0 items-baseline gap-2.5">
                   <span className="text-lg font-light" style={{ color: levelColor(lastEval.ev.lv) }}>{LEVEL_NAMES[lastEval.ev.lv]}</span>
-                  <span className="truncate text-base">
-                    {ITEMS[lastEval.a].l} <span className="text-muted-foreground">·</span> {ITEMS[lastEval.b].l}
+                  <span className="flex min-w-0 items-center gap-1.5 truncate text-base">
+                    <Glyph i={lastEval.a} size={18} />{ITEMS[lastEval.a].l} <span className="text-muted-foreground">·</span> <Glyph i={lastEval.b} size={18} />{ITEMS[lastEval.b].l}
                   </span>
                 </div>
                 <span className="num-mono text-lg font-light" style={{ color: levelColor(lastEval.ev.lv) }} dir="ltr">+{lastEval.ev.sc}</span>

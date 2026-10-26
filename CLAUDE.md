@@ -14,7 +14,8 @@
   carries a full UI/UX and graphics upgrade, never the level-1 state as-is. (2026-10-26)
 - Design must be sophisticated, never childish (2026-10-26, "הגרפיקה על הפנים"): editorial and
   architectural, like a museum catalogue or a drawing set. No emoji anywhere in the UI (the cards are
-  words, set in type), no toy 3D, no glow, no bouncy springs, no saturated colours. Hairline rules,
+  words set in type, each with its hairline glyph from `src/components/Glyph.tsx`: imagery matters,
+  2026-10-26 "חשוב תמונה"; content glyphs are drawn in the drafting language, never emoji or stock icons), no toy 3D, no glow, no bouncy springs, no saturated colours. Hairline rules,
   restrained depth (one soft shadow), muted level colours, IBM Plex Sans Hebrew light/thin, IBM Plex
   Mono numerals and labels, slow precise motion.
 - Fixed top bar on every page: app name links home, content nav, and the A&I logo button

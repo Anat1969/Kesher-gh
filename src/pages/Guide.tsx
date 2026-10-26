@@ -5,6 +5,7 @@ import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { evaluate } from '../game/evaluator';
 import { LEVEL_DEFS } from '../game/levelInfo';
 import { useGame } from '../context/GameContext';
+import Glyph from '../components/Glyph';
 
 const STEPS = [
   { title: 'פותחים שרשרת', body: 'בוחרים מילה ראשונה. היא ראש השרשרת.' },
@@ -108,6 +109,11 @@ export default function Guide() {
                     </div>
                   </dl>
                   <blockquote className="well mt-5 p-4">
+                    <div className="mb-2 flex items-center gap-2" aria-hidden="true">
+                      <Glyph i={a} size={30} strokeWidth={1.15} />
+                      <span className="h-px w-6" style={{ background: levelColor(lv) }} />
+                      <Glyph i={b} size={30} strokeWidth={1.15} />
+                    </div>
                     <div className="label-mono mb-1.5">דוגמה · {ITEMS[a].l} ו{ITEMS[b].l}</div>
                     <p className="text-sm leading-relaxed text-foreground/85">{ev.exp}</p>
                   </blockquote>
