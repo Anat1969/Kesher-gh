@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ITEMS, LEVEL_NAMES, levelColor } from '../game/gameItems';
 import { evaluate } from '../game/evaluator';
+import Glyph from './Glyph';
 
 /** A real chain through the board, mostly hand-crafted secrets, replayed as the hero drawing. */
 const DEMO_PATH = [9, 0, 10, 2, 18, 22, 13, 6, 20, 12, 8, 24, 11, 23];
 const STEP = 1.6;
 const HOLD = 4;
 
-const W = 520, H = 420, PAD_X = 52, PAD_Y = 40;
+const W = 520, H = 460, PAD_X = 52, PAD_Y = 34;
 const pos = (i: number) => {
   // RTL reading order: index 0 sits top-right.
   const col = i % 5, row = Math.floor(i / 5);
@@ -79,10 +80,12 @@ export default function BoardHero() {
             const on = reached.has(i);
             return (
               <g key={i}>
-                <circle cx={p.x} cy={p.y} r={on ? 3.2 : 2} fill={on ? 'hsl(var(--foreground))' : 'hsl(var(--surface-1))'} stroke="hsl(var(--foreground) / 0.55)" strokeWidth={1}
-                  style={{ transition: 'r 0.6s, fill 0.6s' }} />
+                <rect x={p.x - 15} y={p.y - 15} width={30} height={30} fill="hsl(var(--surface-1))"
+                  stroke={on ? 'hsl(var(--foreground) / 0.5)' : 'none'} strokeWidth={1} style={{ transition: 'stroke 0.6s' }} />
+                <Glyph i={i} x={p.x - 11} y={p.y - 11} size={22} strokeWidth={on ? 1.5 : 1.2}
+                  style={{ color: on ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground) / 0.8)', transition: 'color 0.6s' }} />
                 <text
-                  x={p.x} y={p.y + 19} textAnchor="middle" fontSize="13"
+                  x={p.x} y={p.y + 30} textAnchor="middle" fontSize="12"
                   fontWeight={on ? 400 : 300}
                   fill={on ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))'}
                   stroke="hsl(var(--surface-1))" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke"

@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ITEMS, levelColor } from '../game/gameItems';
 import { secretEntries } from '../game/evaluator';
 import { useGame } from '../context/GameContext';
+import Glyph from '../components/Glyph';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -76,6 +77,11 @@ export default function Secrets() {
                 >
                   <span className="num-mono pt-1 text-sm" style={{ color: levelColor('s'), textAlign: 'right' }} dir="ltr">{pad2(i + 1)}</span>
                   <div className="min-w-0">
+                    <div className="mb-2 flex items-center gap-2 text-foreground" aria-hidden="true">
+                      <Glyph i={e.a} size={28} strokeWidth={1.15} />
+                      <span className="h-px w-5" style={{ background: levelColor('s') }} />
+                      <Glyph i={e.b} size={28} strokeWidth={1.15} />
+                    </div>
                     <div className="label-mono">{ITEMS[e.a].l} · {ITEMS[e.b].l}</div>
                     <div className="mt-1 text-xl font-light" style={{ color: levelColor('s') }}>{title}</div>
                     <AnimatePresence initial={false}>

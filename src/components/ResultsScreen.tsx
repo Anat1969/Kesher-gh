@@ -8,6 +8,7 @@ import type { RecordResult, Stats } from '../lib/storage';
 import { buildShareText, shareText, type ShareOutcome } from '../lib/share';
 import ConnectionLines from './ConnectionLines';
 import AnimatedNumber from './AnimatedNumber';
+import Glyph from './Glyph';
 
 interface ResultsScreenProps {
   directConns: Connection[];
@@ -48,10 +49,11 @@ function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'di
           <span
             key={i}
             data-card={i}
-            className={`grid aspect-[4/3] place-items-center truncate rounded-[2px] border px-0.5 text-[0.72rem] ${
-              used.has(i) ? 'border-border bg-surface-1 text-foreground' : 'border-transparent text-muted-foreground/50'
+            className={`flex aspect-square flex-col items-center justify-center gap-1 truncate rounded-[2px] border px-0.5 text-[0.68rem] ${
+              used.has(i) ? 'border-border bg-surface-1 text-foreground' : 'border-transparent text-muted-foreground/40'
             }`}
           >
+            <Glyph i={i} size={22} strokeWidth={1.2} />
             {item.l}
           </span>
         ))}
@@ -198,6 +200,11 @@ export default function ResultsScreen({
             {personality.best && (
               <figure className="panel mt-8 p-5">
                 <figcaption className="label-mono mb-3">הקשר הטוב ביותר שמצאתם</figcaption>
+                <div className="mb-3 flex items-center gap-3" aria-hidden="true">
+                  <Glyph i={personality.best.a} size={36} strokeWidth={1.1} />
+                  <span className="h-px w-8" style={{ background: levelColor(personality.best.ev.lv) }} />
+                  <Glyph i={personality.best.b} size={36} strokeWidth={1.1} />
+                </div>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="text-xl font-light">{ITEMS[personality.best.a].l} <span className="text-muted-foreground">·</span> {ITEMS[personality.best.b].l}</span>
                   <span className="text-sm" style={{ color: levelColor(personality.best.ev.lv) }}>{personality.best.ev.sub}</span>

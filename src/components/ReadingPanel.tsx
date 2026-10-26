@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, levelColor, type Level } from '../game/gameItems';
 import { readingsFor, type Reading } from '../game/evaluator';
 import { LEVEL_DEFS } from '../game/levelInfo';
+import Glyph from './Glyph';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -42,7 +43,7 @@ function ReadingBody({ r }: { r: Reading }) {
           <dl className="space-y-1.5">
             {r.lines.map((l, i) => (
               <div key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 text-[0.92rem] leading-relaxed">
-                <dt className="font-normal text-foreground">{l.w}</dt>
+                <dt className="flex items-start gap-1.5 font-normal text-foreground">{l.w}</dt>
                 <dd className="text-foreground/80">{l.t}</dd>
               </div>
             ))}
@@ -83,8 +84,13 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
           <span className="label-mono">קשר <span className="num-mono" dir="ltr">{String(ordinal).padStart(2, '0')}</span></span>
           <span className="num-mono text-xl font-light" style={{ color: levelColor(primary.lv) }} dir="ltr">+{primary.sc}</span>
         </div>
-        <h2 className="mt-2 text-[2rem] font-thin leading-tight">
-          {ITEMS[a].l} <span className="text-muted-foreground/60">·</span> {ITEMS[b].l}
+        <div className="mt-3 flex items-end gap-4" aria-hidden="true">
+          <Glyph i={a} size={44} strokeWidth={1.1} />
+          <span className="mb-4 h-px flex-1" style={{ background: levelColor(primary.lv) }} />
+          <Glyph i={b} size={44} strokeWidth={1.1} />
+        </div>
+        <h2 className="mt-2 flex justify-between text-[2rem] font-thin leading-tight">
+          <span>{ITEMS[a].l}</span><span>{ITEMS[b].l}</span>
         </h2>
         <div className="mt-4"><DepthScale lv={primary.lv} /></div>
       </header>

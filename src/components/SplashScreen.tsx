@@ -6,6 +6,7 @@ import { SECRET_KEYS } from '../game/evaluator';
 import type { Stats } from '../lib/storage';
 import { LEVEL_DEFS } from '../game/levelInfo';
 import BoardHero from './BoardHero';
+import Glyph from './Glyph';
 
 interface SplashScreenProps {
   stats: Stats;
@@ -138,9 +139,9 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
 
 function ChainDiagram() {
   const nodes = [
-    { x: 300, y: 70, l: 'גל', k: 'א׳' },
-    { x: 170, y: 170, l: 'תו', k: 'ב׳' },
-    { x: 40, y: 70, l: 'ספר', k: 'ג׳' },
+    { x: 300, y: 80, l: 'גל', k: 'א׳', i: 4 },
+    { x: 170, y: 170, l: 'תו', k: 'ב׳', i: 20 },
+    { x: 40, y: 80, l: 'ספר', k: 'ג׳', i: 19 },
   ];
   const draw = (delay: number) => ({
     initial: { pathLength: 0 },
@@ -154,18 +155,19 @@ function ChainDiagram() {
         <span>גיליון 02 · חיבור שרשרת</span>
         <span>סוד · סוד · סוד</span>
       </div>
-      <svg viewBox="0 0 340 220" className="w-full">
-        <motion.path d="M300,70 L170,170" stroke={levelColor('s')} strokeWidth={1.25} fill="none" {...draw(0)} />
-        <motion.path d="M170,170 L40,70" stroke={levelColor('s')} strokeWidth={1.25} fill="none" {...draw(0.8)} />
-        <motion.path d="M300,70 Q170,0 40,70" stroke="hsl(var(--chain))" strokeWidth={1} strokeDasharray="3 4" fill="none" {...draw(1.6)} />
+      <svg viewBox="0 0 340 230" className="w-full">
+        <motion.path d="M300,80 L170,170" stroke={levelColor('s')} strokeWidth={1.25} fill="none" {...draw(0)} />
+        <motion.path d="M170,170 L40,80" stroke={levelColor('s')} strokeWidth={1.25} fill="none" {...draw(0.8)} />
+        <motion.path d="M300,80 Q170,0 40,80" stroke="hsl(var(--chain))" strokeWidth={1} strokeDasharray="3 4" fill="none" {...draw(1.6)} />
         <text x="170" y="26" textAnchor="middle" fontSize="11" fill="hsl(var(--chain))" style={{ fontFamily: 'IBM Plex Mono' }}>
           +{Math.round(CHAIN_RATIO * 100)}%
         </text>
         {nodes.map(n => (
           <g key={n.l}>
-            <circle cx={n.x} cy={n.y} r={3.5} fill="hsl(var(--foreground))" />
-            <text x={n.x} y={n.y + 26} textAnchor="middle" fontSize="16" fontWeight={300} fill="hsl(var(--foreground))" style={{ fontFamily: 'IBM Plex Sans Hebrew' }}>{n.l}</text>
-            <text x={n.x} y={n.y - 12} textAnchor="middle" fontSize="10" fill="hsl(var(--muted-foreground))" style={{ fontFamily: 'IBM Plex Mono' }}>{n.k}</text>
+            <rect x={n.x - 17} y={n.y - 17} width={34} height={34} fill="hsl(var(--surface-1))" stroke="hsl(var(--foreground) / 0.4)" />
+            <Glyph i={n.i} x={n.x - 12} y={n.y - 12} size={24} strokeWidth={1.3} style={{ color: 'hsl(var(--foreground))' }} />
+            <text x={n.x} y={n.y + 36} textAnchor="middle" fontSize="16" fontWeight={300} fill="hsl(var(--foreground))" style={{ fontFamily: 'IBM Plex Sans Hebrew' }}>{n.l}</text>
+            <text x={n.x} y={n.y - 24} textAnchor="middle" fontSize="10" fill="hsl(var(--muted-foreground))" style={{ fontFamily: 'IBM Plex Mono' }}>{n.k}</text>
           </g>
         ))}
       </svg>
