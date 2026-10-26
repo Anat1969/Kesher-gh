@@ -1,133 +1,121 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ITEMS, levelColor } from '../game/gameItems';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ITEMS, LEVEL_NAMES, levelColor } from '../game/gameItems';
 import { evaluate } from '../game/evaluator';
 
-/** A real chain through the board, mostly hand-crafted secrets, replayed as the hero animation. */
+/** A real chain through the board, mostly hand-crafted secrets, replayed as the hero drawing. */
 const DEMO_PATH = [9, 0, 10, 2, 18, 22, 13, 6, 20, 12, 8, 24, 11, 23];
-const STEP = 0.55;
-const HOLD = 2.6;
+const STEP = 1.6;
+const HOLD = 4;
 
-const CELL = 64;
-const GAP = 10;
-const SIZE = CELL * 5 + GAP * 4;
-const center = (i: number) => {
+const W = 520, H = 420, PAD_X = 52, PAD_Y = 40;
+const pos = (i: number) => {
+  // RTL reading order: index 0 sits top-right.
   const col = i % 5, row = Math.floor(i / 5);
-  return { x: col * (CELL + GAP) + CELL / 2, y: row * (CELL + GAP) + CELL / 2 };
+  return { x: W - PAD_X - col * ((W - PAD_X * 2) / 4), y: PAD_Y + row * ((H - PAD_Y * 2) / 4) };
 };
 
 /**
- * The 25 cards laid on a tilted plane, with a chain of connections drawing itself in a loop.
- * Pieces stand up from the board (billboarded emoji) so the scene reads as a real table.
+ * The 25 words laid out like a drawing sheet. A chain of real connections is drafted
+ * line by line, with a caption naming each link as it is drawn.
  */
 export default function BoardHero() {
   const [cycle, setCycle] = useState(0);
+  const [step, setStep] = useState(0);
   const links = useMemo(
-    () => DEMO_PATH.slice(1).map((b, i) => ({ a: DEMO_PATH[i], b, lv: evaluate(DEMO_PATH[i], b).lv })),
+    () => DEMO_PATH.slice(1).map((b, i) => {
+      const a = DEMO_PATH[i];
+      return { a, b, ev: evaluate(a, b) };
+    }),
     [],
   );
-  const total = links.length * STEP + HOLD;
 
   useEffect(() => {
-    const t = setInterval(() => setCycle(c => c + 1), total * 1000);
-    return () => clearInterval(t);
-  }, [total]);
+    setStep(0);
+    const ticks = links.map((_, i) => setTimeout(() => setStep(i + 1), (i * STEP + STEP * 0.5) * 1000));
+    const loop = setTimeout(() => setCycle(c => c + 1), (links.length * STEP + HOLD) * 1000);
+    return () => { ticks.forEach(clearTimeout); clearTimeout(loop); };
+  }, [cycle, links]);
 
-  const reachedAt = (i: number) => {
-    const k = DEMO_PATH.indexOf(i);
-    return k < 0 ? null : Math.max(0, k - 1) * STEP + (k === 0 ? 0 : STEP * 0.6);
-  };
+  const reached = new Set(DEMO_PATH.slice(0, step + 1));
+  const current = step > 0 ? links[step - 1] : null;
 
   return (
-    <div className="relative mx-auto h-[300px] sm:h-[380px] w-full select-none" aria-hidden="true" style={{ perspective: '1100px', overflowX: 'clip' }}>
-      {/* Floor glow */}
-      <div className="absolute inset-x-0 bottom-4 mx-auto h-24 w-[70%] rounded-[50%] blur-2xl" style={{ background: 'hsl(var(--shade) / 0.18)' }} />
+    <figure className="relative mx-auto w-full max-w-[560px] select-none" aria-hidden="true">
+      <div className="panel relative p-3 sm:p-4">
+        <div className="flex items-center justify-between border-b border-border pb-2">
+          <span className="label-mono">גיליון 01 · שרשרת לדוגמה</span>
+          <span className="label-mono num-mono" dir="ltr">{String(step).padStart(2, '0')}/{links.length}</span>
+        </div>
 
-      <div
-        className="absolute left-1/2 top-1/2"
-        style={{
-          width: 'min(360px, 70vw)',
-          aspectRatio: '1',
-          transform: 'translate(-50%, -54%) rotateX(52deg) rotateZ(-28deg)',
-          transformStyle: 'preserve-3d',
-        }}
-      >
-        {/* Plate */}
-        <div
-          className="absolute -inset-4 rounded-md border border-border"
-          style={{
-            background: 'linear-gradient(135deg, hsl(var(--surface-1)), hsl(var(--surface-3)))',
-            boxShadow: '0 1px 0 hsl(var(--hi) / 0.8) inset, 0 40px 60px -20px hsl(var(--shade) / 0.45), 10px 10px 0 -2px hsl(var(--edge))',
-          }}
-        />
-
-        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="absolute inset-0 h-full w-full overflow-visible" style={{ transform: 'translateZ(1px)' }}>
-          <defs>
-            <filter id="hero-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3" />
-            </filter>
-          </defs>
-          {links.map((l, i) => {
-            const A = center(l.a), B = center(l.b);
+        <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 block w-full">
+          {/* Construction grid */}
+          {[0, 1, 2, 3, 4].map(k => {
+            const x = pos(k).x, y = pos(k * 5).y;
             return (
-              <g key={`${cycle}-${i}`}>
-                <motion.line
-                  x1={A.x} y1={A.y} x2={B.x} y2={B.y}
-                  stroke={levelColor(l.lv, 0.55)} strokeWidth={7} strokeLinecap="round" filter="url(#hero-glow)"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ delay: i * STEP, duration: STEP * 0.9, ease: 'easeOut' }}
-                />
-                <motion.line
-                  x1={A.x} y1={A.y} x2={B.x} y2={B.y}
-                  stroke={levelColor(l.lv)} strokeWidth={2.5} strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ delay: i * STEP, duration: STEP * 0.9, ease: 'easeOut' }}
-                />
+              <g key={k}>
+                <line x1={x} y1={PAD_Y - 22} x2={x} y2={H - PAD_Y + 22} stroke="hsl(var(--hairline))" strokeWidth={1} />
+                <line x1={PAD_X - 30} y1={y} x2={W - PAD_X + 30} y2={y} stroke="hsl(var(--hairline))" strokeWidth={1} />
+              </g>
+            );
+          })}
+
+          {links.map((l, i) => {
+            const A = pos(l.a), B = pos(l.b);
+            return (
+              <motion.line
+                key={`${cycle}-${i}`}
+                x1={A.x} y1={A.y} x2={B.x} y2={B.y}
+                stroke={levelColor(l.ev.lv)} strokeWidth={1.25}
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ delay: i * STEP, duration: STEP * 0.7, ease: [0.4, 0, 0.2, 1] }}
+              />
+            );
+          })}
+
+          {ITEMS.map((item, i) => {
+            const p = pos(i);
+            const on = reached.has(i);
+            return (
+              <g key={i}>
+                <circle cx={p.x} cy={p.y} r={on ? 3.2 : 2} fill={on ? 'hsl(var(--foreground))' : 'hsl(var(--surface-1))'} stroke="hsl(var(--foreground) / 0.55)" strokeWidth={1}
+                  style={{ transition: 'r 0.6s, fill 0.6s' }} />
+                <text
+                  x={p.x} y={p.y + 19} textAnchor="middle" fontSize="13"
+                  fontWeight={on ? 400 : 300}
+                  fill={on ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))'}
+                  stroke="hsl(var(--surface-1))" strokeWidth={5} strokeLinejoin="round" paintOrder="stroke"
+                  style={{ transition: 'fill 0.6s', fontFamily: 'IBM Plex Sans Hebrew' }}
+                >
+                  {item.l}
+                </text>
               </g>
             );
           })}
         </svg>
 
-        {ITEMS.map((item, i) => {
-          const c = center(i);
-          const at = reachedAt(i);
-          return (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                left: `${((c.x - CELL / 2) / SIZE) * 100}%`,
-                top: `${((c.y - CELL / 2) / SIZE) * 100}%`,
-                width: `${(CELL / SIZE) * 100}%`,
-                height: `${(CELL / SIZE) * 100}%`,
-                transformStyle: 'preserve-3d',
-              }}
-            >
+        <div className="relative h-12 border-t border-border pt-2">
+          <AnimatePresence mode="wait">
+            {current && (
               <motion.div
-                key={`${cycle}-${i}`}
-                className="absolute inset-0 rounded-[5px] border border-border"
-                style={{
-                  background: 'linear-gradient(145deg, hsl(var(--surface-1)), hsl(var(--surface-2)))',
-                  boxShadow: '3px 3px 0 hsl(var(--edge)), 0 1px 0 hsl(var(--hi) / 0.9) inset',
-                  transformStyle: 'preserve-3d',
-                }}
-                initial={{ z: 0 }}
-                animate={at === null ? { z: 0 } : { z: [0, 0, 14] }}
-                transition={at === null ? undefined : { delay: at, duration: 0.5, times: [0, 0.01, 1], ease: 'easeOut' }}
+                key={`${cycle}-${step}`}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="flex items-baseline gap-3"
               >
-                <span
-                  className="absolute left-1/2 top-1/2 text-[clamp(1.1rem,5vw,1.7rem)] leading-none"
-                  style={{ transform: 'translate(-50%, -80%) rotateZ(28deg) rotateX(-52deg)', transformOrigin: 'center bottom' }}
-                >
-                  {item.e}
+                <span className="text-sm" style={{ color: levelColor(current.ev.lv) }}>{LEVEL_NAMES[current.ev.lv]}</span>
+                <span className="truncate text-sm text-foreground">
+                  {ITEMS[current.a].l} <span className="text-muted-foreground">·</span> {ITEMS[current.b].l}
+                  <span className="text-muted-foreground"> — {current.ev.sub.replace(/^[^—]*—\s*/, '')}</span>
                 </span>
               </motion.div>
-            </div>
-          );
-        })}
+            )}
+          </AnimatePresence>
+        </div>
       </div>
-    </div>
+    </figure>
   );
 }
