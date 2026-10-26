@@ -45,6 +45,7 @@ const Index = () => {
       onFinish={game.finish}
       onMenu={game.resetGame}
       onSettings={updateSettings}
+      onAnnotate={game.annotate}
     />
   );
 };

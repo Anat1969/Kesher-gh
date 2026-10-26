@@ -99,3 +99,16 @@ describe('gameReducer', () => {
     expect(run([{ type: 'menu' }], s)).toEqual(initialState());
   });
 });
+
+describe('annotate', () => {
+  it('records what the player meant without changing the score', () => {
+    let s = gameReducer(initialState(), { type: 'start' });
+    s = gameReducer(s, { type: 'pick', card: 8 });
+    s = gameReducer(s, { type: 'pick', card: 24 });
+    const score = s.score;
+    s = gameReducer(s, { type: 'annotate', index: 0, meant: 't:gold', meantLv: 'p', note: 'שניהם זהובים' });
+    expect(s.directConns[0]).toMatchObject({ meant: 't:gold', meantLv: 'p', note: 'שניהם זהובים' });
+    expect(s.score).toBe(score);
+    expect(gameReducer(s, { type: 'annotate', index: 5, note: 'x' })).toBe(s);
+  });
+});

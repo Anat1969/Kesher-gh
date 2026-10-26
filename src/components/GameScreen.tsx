@@ -2,11 +2,13 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ITEMS, LEVEL_NAMES, LEVEL_ORDER, SCORE_VALUES, CHAIN_RATIO, MILESTONES,
-  levelColor, type Milestone,
+  levelColor, type Level, type Milestone,
 } from '../game/gameItems';
 import type { GameState } from '../game/engine';
 import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
-import { isHandCraftedSecret, pairKey, suggestConnectionTypes } from '../game/evaluator';
+import { isHandCraftedSecret, pairKey, readingsFor } from '../game/evaluator';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import ReadingPanel from './ReadingPanel';
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import PauseDialog from './PauseDialog';
@@ -25,6 +27,7 @@ interface GameScreenProps {
   onFinish: () => void;
   onMenu: () => void;
   onSettings: (patch: Partial<Settings>) => void;
+  onAnnotate: (index: number, patch: { meant?: string; meantLv?: Level; note?: string }) => void;
 }
 
 const COLS = 5;
@@ -38,11 +41,11 @@ function formatTime(t: number) {
 
 export default function GameScreen({
   state, totalScore, currentMilestone, nextMilestone, settings, knownSecrets,
-  onPick, onPause, onResume, onFinish, onMenu, onSettings,
+  onPick, onPause, onResume, onFinish, onMenu, onSettings, onAnnotate,
 }: GameScreenProps) {
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [expanded, setExpanded] = useState(false);
   const [chainToast, setChainToast] = useState<{ count: number; id: number } | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const { lastEval } = state;
   const isUrgent = state.timeLeft <= 30;
@@ -50,7 +53,7 @@ export default function GameScreen({
   // Collapse the explanation and surface chain discoveries on every new connection.
   useEffect(() => {
     if (!lastEval) return;
-    setExpanded(false);
+    setSheetOpen(false);
     if (state.pendingChains.length === 0) return;
     setChainToast({ count: state.pendingChains.length, id: lastEval.id });
     const t = setTimeout(() => setChainToast(null), 2600);
@@ -71,8 +74,22 @@ export default function GameScreen({
     cardRefs.current[next]?.focus();
   };
 
-  const sodSuggestions = lastEval?.ev.lv === 's' ? suggestConnectionTypes(lastEval.a, lastEval.b) : [];
   const isNewSecret = !!lastEval && isHandCraftedSecret(lastEval.a, lastEval.b) && !knownSecrets.has(pairKey(lastEval.a, lastEval.b));
+
+  const lastIndex = state.directConns.length - 1;
+  const lastConn = lastEval ? state.directConns[lastIndex] : undefined;
+  const alternatives = lastEval ? Math.max(0, readingsFor(lastEval.a, lastEval.b).length - 1) : 0;
+  const panel = lastEval && lastConn ? (
+    <ReadingPanel
+      a={lastEval.a}
+      b={lastEval.b}
+      ordinal={state.directConns.length}
+      meant={lastConn.meant}
+      note={lastConn.note}
+      onMeant={(meant, meantLv) => onAnnotate(lastIndex, { meant, meantLv })}
+      onNote={note => onAnnotate(lastIndex, { note })}
+    />
+  ) : null;
 
   const recent = [
     ...state.directConns.map((c, i) => ({ ...c, key: `d${i}` })),
@@ -81,9 +98,10 @@ export default function GameScreen({
 
   return (
     <div
-      className="mx-auto flex w-full max-w-[680px] flex-col gap-3 overflow-hidden px-3 pt-3"
+      className="mx-auto grid w-full max-w-[1200px] grid-cols-[minmax(0,1fr)] gap-x-6 overflow-hidden px-3 pb-3 pt-3 lg:grid-cols-[minmax(0,1fr)_400px]"
       style={{ height: 'calc(100dvh - var(--bar-h) - env(safe-area-inset-top))' }}
     >
+    <div className="flex min-h-0 flex-col gap-3">
       {/* Instrument panel */}
       <section className="panel flex-shrink-0" aria-label="מצב המשחק">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-stretch">
@@ -136,7 +154,7 @@ export default function GameScreen({
       <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center">
         <div
           className="well relative w-full p-[clamp(6px,1.8vw,12px)]"
-          style={{ maxWidth: 'min(560px, calc((100dvh - var(--bar-h) - 22rem) * 1.05))', minWidth: '272px' }}
+          style={{ maxWidth: 'min(600px, calc((100dvh - var(--bar-h) - var(--board-chrome)) * 1.05))', minWidth: '272px' }}
         >
           <ConnectionLines directConns={state.directConns} chainConns={state.chainConns} newestId={lastEval?.id ?? 0} />
 
@@ -232,8 +250,8 @@ export default function GameScreen({
         </div>
       </main>
 
-      {/* Reading: the latest connection */}
-      <section className="panel relative mb-[max(0.75rem,env(safe-area-inset-bottom))] flex-shrink-0 overflow-hidden" aria-live="polite" aria-atomic="true">
+      {/* Reading, compact (phones and tablets) */}
+      <section className="panel relative mb-[max(0.75rem,env(safe-area-inset-bottom))] flex-shrink-0 overflow-hidden lg:hidden" aria-live="polite" aria-atomic="true">
         <AnimatePresence mode="wait" initial={false}>
           {lastEval ? (
             <motion.div
@@ -254,27 +272,16 @@ export default function GameScreen({
                 <span className="num-mono text-lg font-light" style={{ color: levelColor(lastEval.ev.lv) }} dir="ltr">+{lastEval.ev.sc}</span>
               </div>
               <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="truncate text-[0.78rem] text-muted-foreground">{lastEval.ev.sub}</span>
+                <span className="truncate text-[0.82rem]" style={{ color: levelColor(lastEval.ev.lv) }}>{lastEval.ev.sub.replace(/^[^—]*—\s*/, '')}</span>
                 {isNewSecret && (
                   <span className="label-mono border px-1.5 py-px" style={{ color: levelColor('s'), borderColor: levelColor('s', 0.45) }}>
                     סוד חדש נחשף
                   </span>
                 )}
               </div>
-              {sodSuggestions.length > 0 && (
-                <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
-                  <span className="label-mono">אולי חשבתם על</span>
-                  <span className="text-[0.75rem]" style={{ color: levelColor('s') }}>{sodSuggestions.join(' · ')}</span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setExpanded(v => !v)}
-                aria-expanded={expanded}
-                className="mt-1.5 w-full rounded text-right text-[0.84rem] leading-relaxed text-foreground/85 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                <span className={expanded ? '' : 'line-clamp-2'}>{lastEval.ev.exp}</span>
-                <span className="label-mono link-draw mt-1 inline-block">{expanded ? 'צמצום' : 'קריאה מלאה'}</span>
+              <p className="mt-1 line-clamp-2 text-[0.84rem] leading-relaxed text-foreground/85">{lastEval.ev.insight ?? lastEval.ev.exp}</p>
+              <button type="button" onClick={() => setSheetOpen(true)} className="label-mono link-draw mt-1.5">
+                קריאה מלאה{alternatives > 0 ? ` · עוד ${alternatives} קריאות` : ''}
               </button>
             </motion.div>
           ) : (
@@ -303,6 +310,54 @@ export default function GameScreen({
           </ul>
         )}
       </section>
+    </div>
+
+      {/* Reading, full (desktop side panel) */}
+      <aside className="panel hidden min-h-0 flex-col overflow-hidden lg:flex" aria-live="polite" aria-label="הקשר האחרון">
+        <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <AnimatePresence mode="wait" initial={false}>
+            {lastEval ? (
+              <motion.div key={lastEval.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}>
+                {isNewSecret && (
+                  <p className="label-mono mb-4 w-fit border px-1.5 py-px" style={{ color: levelColor('s'), borderColor: levelColor('s', 0.45) }}>סוד חדש נחשף</p>
+                )}
+                {panel}
+              </motion.div>
+            ) : (
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <p className="label-mono">קריאה</p>
+                <h2 className="mt-2 text-[2rem] font-thin leading-tight">כאן יופיע הקשר</h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  בחרו שתי מילים. לכל חיבור תופיע קריאה מלאה: הדרגה, ההסבר, למה זו הדרגה, וקריאות נוספות אם התכוונתם למשהו אחר.
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        {recent.length > 0 && (
+          <div className="border-t border-border px-6 py-3">
+            <p className="label-mono mb-1.5">קשרים אחרונים</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1">
+              {recent.map(c => (
+                <li key={c.key} className="flex items-baseline gap-1.5 whitespace-nowrap text-[0.75rem]">
+                  <span className={c.isChain ? 'text-muted-foreground' : ''}>{ITEMS[c.a].l}·{ITEMS[c.b].l}</span>
+                  <span dir="ltr" className="num-mono text-[0.66rem]" style={{ color: c.isChain ? 'hsl(var(--chain))' : levelColor(c.ev.lv) }}>+{c.isChain ? c.bonus : c.ev.sc}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </aside>
+
+      <Dialog open={sheetOpen && !!lastEval} onOpenChange={setSheetOpen}>
+        <DialogContent
+          dir="rtl"
+          className="bottom-0 left-0 top-auto max-h-[88dvh] w-full max-w-none translate-x-0 translate-y-0 overflow-y-auto rounded-none border-x-0 border-b-0 bg-surface-1 p-5 pt-12 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-right data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom sm:rounded-none"
+        >
+          <DialogTitle className="sr-only">קריאה מלאה של הקשר</DialogTitle>
+          {panel}
+        </DialogContent>
+      </Dialog>
 
       <PauseDialog open={state.paused} settings={settings} onResume={onResume} onFinish={onFinish} onMenu={onMenu} onSettings={onSettings} />
     </div>

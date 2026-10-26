@@ -1,4 +1,4 @@
-import { ITEMS, CHAIN_RATIO } from './gameItems';
+import { ITEMS, CHAIN_RATIO, type Level } from './gameItems';
 import { evaluate, pairKey, type Evaluation } from './evaluator';
 import type { Connection } from './personality';
 
@@ -44,7 +44,9 @@ export type GameAction =
   | { type: 'pause' }
   | { type: 'resume' }
   | { type: 'finish' }
-  | { type: 'menu' };
+  | { type: 'menu' }
+  /** Record what the player meant by a connection: one of its readings, or their own words. */
+  | { type: 'annotate'; index: number; meant?: string; meantLv?: Level; note?: string };
 
 export function initialState(screen: Screen = 'splash'): GameState {
   return {
@@ -147,6 +149,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return state.screen === 'game' ? { ...state, paused: false, screen: 'results' } : state;
     case 'menu':
       return initialState('splash');
+    case 'annotate': {
+      const c = state.directConns[action.index];
+      if (!c) return state;
+      const { index: _i, type: _t, ...patch } = action;
+      const directConns = state.directConns.slice();
+      directConns[action.index] = { ...c, ...patch };
+      return { ...state, directConns };
+    }
   }
 }
 

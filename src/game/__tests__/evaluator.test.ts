@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluate, pairKey, SECRET_KEYS, isHandCraftedSecret, suggestConnectionTypes } from '../evaluator';
+import { evaluate, pairKey, SECRET_KEYS, isHandCraftedSecret, suggestConnectionTypes, readingsFor } from '../evaluator';
 import { ITEMS, SCORE_VALUES, LEVEL_ORDER } from '../gameItems';
 
 const allPairs: [number, number][] = [];
@@ -63,5 +63,37 @@ describe('suggestConnectionTypes', () => {
       expect(s.length).toBeGreaterThanOrEqual(1);
       expect(s.length).toBeLessThanOrEqual(3);
     }
+  });
+});
+
+describe('reading engine', () => {
+  it('gives every pair its own explanation', () => {
+    const exps = new Set(allPairs.map(([a, b]) => evaluate(a, b).exp));
+    expect(exps.size).toBe(allPairs.length);
+  });
+
+  it('awards sod only for a documented secret or a shared paradox', () => {
+    for (const [a, b] of allPairs) {
+      const r = readingsFor(a, b)[0];
+      if (r.lv === 's') expect(['hc', 'par']).toContain(r.key);
+    }
+  });
+
+  it('explains why each reading earns its level, and lists deepest first', () => {
+    const rank = { p: 0, r: 1, d: 2, s: 3 } as const;
+    for (const [a, b] of allPairs) {
+      const rs = readingsFor(a, b);
+      expect(rs.length).toBeGreaterThan(0);
+      rs.forEach(r => expect(r.why.length).toBeGreaterThan(10));
+      for (let i = 1; i < rs.length; i++) expect(rank[rs[i - 1].lv]).toBeGreaterThanOrEqual(rank[rs[i].lv]);
+      expect(new Set(rs.map(r => r.key)).size).toBe(rs.length);
+    }
+  });
+
+  it('puts the picked card first in the wording', () => {
+    const [x] = readingsFor(8, 24).filter(r => r.key === 't:power');
+    const [y] = readingsFor(24, 8).filter(r => r.key === 't:power');
+    expect(x.lines?.[0].w).toBe(ITEMS[8].l);
+    expect(y.lines?.[0].w).toBe(ITEMS[24].l);
   });
 });
