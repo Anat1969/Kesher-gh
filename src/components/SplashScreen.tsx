@@ -7,6 +7,8 @@ import type { Stats } from '../lib/storage';
 import { LEVEL_DEFS } from '../game/levelInfo';
 import BoardHero from './BoardHero';
 import Glyph from './Glyph';
+import Rich from './Rich';
+import { plain } from '../lib/marker';
 
 interface SplashScreenProps {
   stats: Stats;
@@ -42,7 +44,7 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
             קֶשֶׁר
           </motion.h1>
           <motion.p {...fade(0.16)} className="mt-7 max-w-[34ch] text-xl font-light leading-relaxed text-foreground/80 sm:text-[1.4rem]">
-            שרשרת אחת של {TOTAL_CARDS} מילים. כל חיבור נמדד בעומקו, מהגלוי ועד הנסתר.
+            שרשרת אחת של {TOTAL_CARDS} מילים. <mark className="hl">כל חיבור נמדד בעומקו</mark>, מהגלוי ועד הנסתר.
           </motion.p>
 
           <motion.div {...fade(0.24)} className="mt-10 flex flex-wrap items-center gap-3">
@@ -86,7 +88,7 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
             <h2 id="depth-title" className="mt-3 text-4xl font-extralight sm:text-5xl">ארבע שכבות של קשר</h2>
           </div>
           <p className="max-w-[40ch] self-end text-sm leading-relaxed text-muted-foreground">
-            ארבע דרכי הפרשנות המסורתיות, פשט, רמז, דרש וסוד, הופכות כאן לסרגל מדידה של חשיבה.
+            ארבע דרכי הפרשנות המסורתיות, פשט, רמז, דרש וסוד, הופכות כאן ל<mark className="hl">סרגל מדידה של חשיבה</mark>.
           </p>
         </motion.div>
 
@@ -101,8 +103,8 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
               <span className="text-3xl font-extralight" style={{ color: levelColor(lv) }}>{LEVEL_NAMES[lv]}</span>
               <div className="col-span-3 col-start-2 row-start-2 sm:col-span-1 sm:col-start-auto sm:row-start-auto">
                 <div className="text-base font-normal">{LEVEL_DEFS[lv].title}</div>
-                <p className="mt-1 text-sm leading-relaxed text-foreground/80">{LEVEL_DEFS[lv].definition}</p>
-                <p className="mt-1.5 text-[0.8rem] text-muted-foreground">מבחן: {LEVEL_DEFS[lv].test}</p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground/80"><Rich text={LEVEL_DEFS[lv].definition} /></p>
+                <p className="mt-1.5 text-[0.8rem] text-muted-foreground">מבחן: {plain(LEVEL_DEFS[lv].test)}</p>
               </div>
               <span className="col-start-3 row-start-1 text-left sm:col-start-auto sm:row-start-auto">
                 <span className="display-num text-3xl" dir="ltr">{SCORE_VALUES[lv]}</span>
@@ -119,7 +121,7 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
           <p className="label-mono">02 · בונוס</p>
           <h2 id="chain-title" className="mt-3 text-4xl font-extralight sm:text-5xl">חיבורי שרשרת</h2>
           <p className="mt-5 max-w-[44ch] text-base leading-relaxed text-muted-foreground">
-            כשמחברים א׳ לב׳ ואז ב׳ לג׳, המערכת חושפת גם את הקשר הסמוי בין א׳ לג׳, ומוסיפה עליו
+            כשמחברים א׳ לב׳ ואז ב׳ לג׳, המערכת <mark className="hl">חושפת גם את הקשר הסמוי</mark> בין א׳ לג׳, ומוסיפה עליו
             <span className="text-foreground"> {Math.round(CHAIN_RATIO * 100)}% </span>
             מערכו. מי שבונה שרשרת בתבונה, מכפיל את הניקוד.
           </p>
@@ -165,7 +167,7 @@ function ChainDiagram() {
         {nodes.map(n => (
           <g key={n.l}>
             <rect x={n.x - 17} y={n.y - 17} width={34} height={34} fill="hsl(var(--surface-1))" stroke="hsl(var(--foreground) / 0.4)" />
-            <Glyph i={n.i} x={n.x - 12} y={n.y - 12} size={24} strokeWidth={1.3} style={{ color: 'hsl(var(--foreground))' }} />
+            <Glyph i={n.i} x={n.x - 12} y={n.y - 12} size={24} />
             <text x={n.x} y={n.y + 36} textAnchor="middle" fontSize="16" fontWeight={300} fill="hsl(var(--foreground))" style={{ fontFamily: 'IBM Plex Sans Hebrew' }}>{n.l}</text>
             <text x={n.x} y={n.y - 24} textAnchor="middle" fontSize="10" fill="hsl(var(--muted-foreground))" style={{ fontFamily: 'IBM Plex Mono' }}>{n.k}</text>
           </g>

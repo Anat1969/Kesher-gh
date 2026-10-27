@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { useThemeColorMeta } from "./hooks/useThemeColorMeta";
 import { GameProvider } from "./context/GameContext";
 import TopBar from "./components/TopBar";
+import { GlyphDefs } from "./components/Glyph";
 import Index from "./pages/Index.tsx";
 import Guide from "./pages/Guide.tsx";
 import Secrets from "./pages/Secrets.tsx";
@@ -45,6 +46,7 @@ const AppRoutes = () => {
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="kesher:theme" disableTransitionOnChange>
     <ThemeColorSync />
+    <GlyphDefs />
     <MotionConfig reducedMotion="user">
       <BrowserRouter>
         <GameProvider>

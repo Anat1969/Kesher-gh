@@ -4,6 +4,8 @@ import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, levelColor, type Level } from '../game
 import { readingsFor, type Reading } from '../game/evaluator';
 import { LEVEL_DEFS } from '../game/levelInfo';
 import Glyph from './Glyph';
+import Rich from './Rich';
+import { plain } from '../lib/marker';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -37,23 +39,25 @@ export function DepthScale({ lv }: { lv: Level }) {
 
 function ReadingBody({ r }: { r: Reading }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {r.lines ? (
         <>
-          <dl className="space-y-1.5">
+          {r.insight && (
+            <p className="border-r-2 pr-3 text-[1.02rem] leading-relaxed text-foreground" style={{ borderColor: levelColor(r.lv) }}>
+              <Rich text={r.insight} />
+            </p>
+          )}
+          <dl className="space-y-1">
             {r.lines.map((l, i) => (
-              <div key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 text-[0.92rem] leading-relaxed">
-                <dt className="flex items-start gap-1.5 font-normal text-foreground">{l.w}</dt>
-                <dd className="text-foreground/80">{l.t}</dd>
+              <div key={i} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 text-[0.84rem] leading-relaxed">
+                <dt className="font-normal text-foreground">{l.w}</dt>
+                <dd className="text-muted-foreground"><Rich text={l.t} /></dd>
               </div>
             ))}
           </dl>
-          {r.insight && (
-            <p className="border-r-2 pr-3 text-[0.92rem] leading-relaxed text-foreground" style={{ borderColor: levelColor(r.lv) }}>{r.insight}</p>
-          )}
         </>
       ) : (
-        <p className="text-[0.92rem] leading-relaxed text-foreground/85">{r.exp}</p>
+        <p className="text-[0.95rem] leading-relaxed text-foreground/85"><Rich text={r.exp} /></p>
       )}
     </div>
   );
@@ -85,9 +89,9 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
           <span className="num-mono text-xl font-light" style={{ color: levelColor(primary.lv) }} dir="ltr">+{primary.sc}</span>
         </div>
         <div className="mt-3 flex items-end gap-4" aria-hidden="true">
-          <Glyph i={a} size={44} strokeWidth={1.1} />
+          <Glyph i={a} size={44} />
           <span className="mb-4 h-px flex-1" style={{ background: levelColor(primary.lv) }} />
-          <Glyph i={b} size={44} strokeWidth={1.1} />
+          <Glyph i={b} size={44} />
         </div>
         <h2 className="mt-2 flex justify-between text-[2rem] font-thin leading-tight">
           <span>{ITEMS[a].l}</span><span>{ITEMS[b].l}</span>
@@ -105,8 +109,8 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
       {/* 3. Why this depth */}
       <section className="well p-3.5">
         <p className="label-mono mb-1">למה {LEVEL_NAMES[primary.lv]}?</p>
-        <p className="text-[0.86rem] leading-relaxed text-foreground/85">{primary.why}</p>
-        <p className="mt-2 text-[0.78rem] text-muted-foreground">שאלת המבחן: {def.test}</p>
+        <p className="text-[0.86rem] leading-relaxed text-foreground/85"><Rich text={primary.why} /></p>
+        <p className="mt-2 text-[0.78rem] text-muted-foreground">שאלת המבחן: {plain(def.test)}</p>
       </section>
 
       {/* 4. What did you mean? */}
@@ -134,7 +138,7 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
                   <AnimatePresence initial={false}>
                     {chosen && r.key === chosen.key && i > 0 && (
                       <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.35, ease: EASE }} className="overflow-hidden">
-                        <div className="pb-3"><ReadingBody r={r} /><p className="mt-2 text-[0.78rem] text-muted-foreground">{r.why}</p></div>
+                        <div className="pb-3"><ReadingBody r={r} /><p className="mt-2 text-[0.78rem] text-muted-foreground"><Rich text={r.why} /></p></div>
                       </motion.div>
                     )}
                   </AnimatePresence>

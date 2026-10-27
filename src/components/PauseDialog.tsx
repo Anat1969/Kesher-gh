@@ -24,6 +24,10 @@ export function SettingsToggles({ settings, onSettings }: Pick<PauseDialogProps,
         <span>רטט</span>
         <Switch dir="ltr" checked={settings.haptics} onCheckedChange={haptics => onSettings({ haptics })} aria-label="רטט" />
       </label>
+      <label className="flex cursor-pointer items-center justify-between gap-4 text-sm">
+        <span>שמות על הכרטיסים</span>
+        <Switch dir="ltr" checked={settings.labels} onCheckedChange={labels => onSettings({ labels })} aria-label="שמות על הכרטיסים" />
+      </label>
     </div>
   );
 }

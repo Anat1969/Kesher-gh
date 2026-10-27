@@ -35,8 +35,8 @@ export default function DidYouKnow() {
         <p className="label-mono flex items-center gap-3"><span className="h-px w-8 bg-foreground/40" />הידעת</p>
         <h1 className="mt-6 text-5xl font-thin leading-[0.95] sm:text-7xl">יש יותר מארבע דרכים לקשור</h1>
         <p className="mt-7 text-xl font-light leading-relaxed text-foreground/80">
-          פשט, רמז, דרש וסוד מודדים כמה עמוק קשר. אבל אפשר גם לשאול איזה סוג של קשר הוא.
-          לסוגים אין סדר של עומק; הם משפחות, וכל משפחה נוטה לנחות על דרגות מסוימות.
+          פשט, רמז, דרש וסוד מודדים כמה עמוק קשר. אבל אפשר גם לשאול <mark className="hl">איזה סוג של קשר הוא</mark>.
+          לסוגים אין סדר של עומק; <mark className="hl">הם משפחות</mark>, וכל משפחה נוטה לנחות על דרגות מסוימות.
         </p>
       </header>
 
@@ -64,7 +64,7 @@ export default function DidYouKnow() {
                       ))}
                     </span>
                   </div>
-                  <p className="mt-2 text-base text-foreground/80">{g.gist}</p>
+                  <p className="mt-2 text-base text-foreground/80"><mark className="hl">{g.gist}</mark></p>
                 </button>
                 <ul className="mt-4 space-y-3">
                   {g.types.map(t => (

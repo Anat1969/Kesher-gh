@@ -5,6 +5,7 @@ import { ITEMS, levelColor } from '../game/gameItems';
 import { secretEntries } from '../game/evaluator';
 import { useGame } from '../context/GameContext';
 import Glyph from '../components/Glyph';
+import Rich from '../components/Rich';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -24,7 +25,7 @@ export default function Secrets() {
           <p className="label-mono flex items-center gap-3"><span className="h-px w-8 bg-foreground/40" />קטלוג</p>
           <h1 className="mt-6 text-5xl font-thin leading-[0.95] sm:text-7xl">אוסף הסודות</h1>
           <p className="mt-7 text-xl font-light leading-relaxed text-foreground/80">
-            {entries.length} זוגות שהקשר ביניהם הוא סוד אמיתי: ממצא מדעי, מיתוס או תבנית מתמטית.
+            {entries.length} זוגות שהקשר ביניהם הוא <mark className="hl">סוד אמיתי</mark>: ממצא מדעי, מיתוס או תבנית מתמטית.
             כל זוג שמחברים במשחק נרשם כאן לתמיד.
           </p>
         </div>
@@ -78,9 +79,9 @@ export default function Secrets() {
                   <span className="num-mono pt-1 text-sm" style={{ color: levelColor('s'), textAlign: 'right' }} dir="ltr">{pad2(i + 1)}</span>
                   <div className="min-w-0">
                     <div className="mb-2 flex items-center gap-2 text-foreground" aria-hidden="true">
-                      <Glyph i={e.a} size={28} strokeWidth={1.15} />
+                      <Glyph i={e.a} size={28} />
                       <span className="h-px w-5" style={{ background: levelColor('s') }} />
-                      <Glyph i={e.b} size={28} strokeWidth={1.15} />
+                      <Glyph i={e.b} size={28} />
                     </div>
                     <div className="label-mono">{ITEMS[e.a].l} · {ITEMS[e.b].l}</div>
                     <div className="mt-1 text-xl font-light" style={{ color: levelColor('s') }}>{title}</div>
@@ -93,7 +94,7 @@ export default function Secrets() {
                           transition={{ duration: 0.4, ease: EASE }}
                           className="overflow-hidden text-[0.95rem] leading-relaxed text-foreground/85"
                         >
-                          <span className="block pt-3">{e.ev.exp}</span>
+                          <span className="block pt-3"><Rich text={e.ev.exp} /></span>
                         </motion.p>
                       )}
                     </AnimatePresence>

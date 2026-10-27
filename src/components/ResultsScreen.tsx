@@ -9,6 +9,8 @@ import { buildShareText, shareText, type ShareOutcome } from '../lib/share';
 import ConnectionLines from './ConnectionLines';
 import AnimatedNumber from './AnimatedNumber';
 import Glyph from './Glyph';
+import Rich from './Rich';
+import { markLead } from '../lib/marker';
 
 interface ResultsScreenProps {
   directConns: Connection[];
@@ -53,7 +55,7 @@ function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'di
               used.has(i) ? 'border-border bg-surface-1 text-foreground' : 'border-transparent text-muted-foreground/40'
             }`}
           >
-            <Glyph i={i} size={22} strokeWidth={1.2} />
+            <Glyph i={i} size={22} />
             {item.l}
           </span>
         ))}
@@ -180,7 +182,7 @@ export default function ResultsScreen({
 
         {personality && (
           <Section n={next()} kicker="סגנון החשיבה שלך" title={personality.type}>
-            <p className="max-w-[60ch] text-lg font-light leading-relaxed text-foreground/85">{personality.desc}</p>
+            <p className="max-w-[60ch] text-lg font-light leading-relaxed text-foreground/85"><Rich text={markLead(personality.desc)} /></p>
             <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2">
               {[
                 { title: 'חוזקה', body: personality.strength },
@@ -201,15 +203,15 @@ export default function ResultsScreen({
               <figure className="panel mt-8 p-5">
                 <figcaption className="label-mono mb-3">הקשר הטוב ביותר שמצאתם</figcaption>
                 <div className="mb-3 flex items-center gap-3" aria-hidden="true">
-                  <Glyph i={personality.best.a} size={36} strokeWidth={1.1} />
+                  <Glyph i={personality.best.a} size={36} />
                   <span className="h-px w-8" style={{ background: levelColor(personality.best.ev.lv) }} />
-                  <Glyph i={personality.best.b} size={36} strokeWidth={1.1} />
+                  <Glyph i={personality.best.b} size={36} />
                 </div>
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="text-xl font-light">{ITEMS[personality.best.a].l} <span className="text-muted-foreground">·</span> {ITEMS[personality.best.b].l}</span>
                   <span className="text-sm" style={{ color: levelColor(personality.best.ev.lv) }}>{personality.best.ev.sub}</span>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{personality.best.ev.exp}</p>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground"><Rich text={personality.best.ev.exp} /></p>
               </figure>
             )}
           </Section>
@@ -240,7 +242,7 @@ export default function ResultsScreen({
                           <span className="whitespace-nowrap text-sm">{ITEMS[c.a].l} · {ITEMS[c.b].l}</span>
                           <span className="truncate text-xs" style={{ color }}>{c.isChain ? 'שרשרת · ' : ''}{c.ev.sub}</span>
                         </div>
-                        <div className={`mt-0.5 text-xs text-muted-foreground ${openLog === i ? 'leading-relaxed' : 'truncate'}`}>{c.ev.exp}</div>
+                        <div className={`mt-0.5 text-xs text-muted-foreground ${openLog === i ? 'leading-relaxed' : 'truncate'}`}><Rich text={c.ev.exp} /></div>
                         {meantSub(c) && <div className="mt-1 text-xs"><span className="label-mono">התכוונתם · </span>{meantSub(c)}</div>}
                         {c.note && <div className="mt-1 text-xs"><span className="label-mono">הקשר שלכם · </span>{c.note}</div>}
                       </div>

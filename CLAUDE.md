@@ -27,6 +27,13 @@
   Sod only for a documented secret or a shared paradox, never as a fallback. Show the alternative
   readings and let the player say what they meant or write their own; that shapes the thinking
   profile, never the score. Facts in hand-crafted readings must be checked (names, dates, numbers).
+- Readable in a second (2026-10-27, repeated owner instruction for every app): text is read with
+  the eyes, not the head. Mark the insight and the key words of every text with the yellow
+  highlighter (`**phrase**` in content strings, rendered by `src/components/Rich.tsx`; `.hl` in JSX).
+  Lead with the insight, keep rationales to one short sentence, cut anything that needs re-reading.
+- Imagery (2026-10-27): card drawings are soft, free, hand-drawn gold lines with a light gold wash
+  (`Glyph` tone="gold", `--gold`). The board shows images only; names are an option in the A&I
+  menu and appear on the selected card. App icon and share image use the same gold-on-ink language.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## What "upgrade" means here
