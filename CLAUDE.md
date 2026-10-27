@@ -51,6 +51,13 @@
   `kesher_scores` closed to the public key; the client calls only the RPCs `kesher_submit`,
   `kesher_leaderboard`, `kesher_history` (`src/lib/remote.ts`, fails soft offline). Joining is opt-in with a
   nickname only; identity is a random id + private key in localStorage.
+- Devices and board (2026-10-27): `/scores` ("למידה") holds the learning graph and the player code
+  (`src/components/PlayerCode.tsx`): a link `/scores#player=CODE` or pasted code continues as the same
+  player on another device (checked by RPC `kesher_whoami`) and pulls the server history into the graph.
+  `/board` ("טבלה") is the leaderboard. The all-time board always holds the four sons of the Haggadah
+  (`src/game/sons.ts`) as standing rows: each plays the real engine limited to the levels he can see
+  (חכם all four up to sod, רשע up to drash, "לכם ולא לו", תם pshat and remez, שאינו יודע לשאול pshat only)
+  and his pace of asking; scores are computed, never typed, and must stay in Haggadah order (tested).
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## What "upgrade" means here

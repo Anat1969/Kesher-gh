@@ -272,7 +272,7 @@ export default function ResultsScreen({
           <Section n={next()} kicker="גרף למידה" title="לאן אתם מתקדמים">
             <p className="-mt-3 mb-6 text-lg font-light"><Rich text={trendLine([...stats.history].reverse().map(h => h.total))} /></p>
             <LearningChart history={stats.history} compact />
-            <Link to="/scores" className="label-mono link-draw mt-4 inline-block">הגרף המלא והטבלה</Link>
+            <Link to="/scores" className="label-mono link-draw mt-4 inline-block">הגרף המלא</Link>
           </Section>
         )}
       </div>
