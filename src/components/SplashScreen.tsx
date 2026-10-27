@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { LEVEL_NAMES, LEVEL_ORDER, SCORE_VALUES, levelColor, CHAIN_RATIO } from '../game/gameItems';
 import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { SECRET_KEYS } from '../game/evaluator';
-import type { Stats } from '../lib/storage';
+import type { DailyResult, Stats } from '../lib/storage';
+import DailyCard from './DailyCard';
 import { LEVEL_DEFS } from '../game/levelInfo';
 import BoardHero from './BoardHero';
 import Glyph from './Glyph';
@@ -13,6 +14,8 @@ import { plain } from '../lib/marker';
 interface SplashScreenProps {
   stats: Stats;
   onStart: () => void;
+  onDaily: () => void;
+  dailyResults: Record<string, DailyResult>;
 }
 
 const fade = (delay: number) => ({
@@ -28,7 +31,7 @@ const inView = (delay = 0) => ({
   transition: { delay, duration: 0.8, ease: [0.4, 0, 0.2, 1] },
 });
 
-export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
+export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: SplashScreenProps) {
   const played = stats.gamesPlayed > 0;
 
   return (
@@ -79,6 +82,8 @@ export default function SplashScreen({ stats, onStart }: SplashScreenProps) {
           <BoardHero />
         </motion.div>
       </section>
+
+      <DailyCard results={dailyResults} onStart={onDaily} />
 
       {/* The four depths, as a table of contents */}
       <section aria-labelledby="depth-title" className="mt-24 md:mt-32">

@@ -5,7 +5,7 @@ import App from '../../App';
 describe('App', () => {
   beforeEach(() => localStorage.clear());
 
-  it('plays a connection end-to-end and finishes from the pause menu', async () => {
+  it('plays a connection end-to-end, stops the clock and finishes', async () => {
     render(<App />);
     fireEvent.click(screen.getAllByRole('button', { name: 'התחלת משחק' })[0]);
 
@@ -17,7 +17,8 @@ describe('App', () => {
     expect((await screen.findAllByText('סוֹד')).length).toBeGreaterThan(0);
     expect((await screen.findAllByText('סוד חדש נחשף')).length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'השהיה ותפריט' }));
+    fireEvent.click(screen.getByRole('button', { name: 'עצירה' }));
+    expect(await screen.findByText('השעון עצור')).toBeInTheDocument();
     await act(async () => {
       fireEvent.click(await screen.findByRole('button', { name: 'סיים עכשיו וראה תוצאות' }));
     });

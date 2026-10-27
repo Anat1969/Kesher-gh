@@ -1,11 +1,13 @@
 import { ITEMS, CHAIN_RATIO, type Level } from './gameItems';
 import { evaluate, pairKey, type Evaluation } from './evaluator';
 import type { Connection } from './personality';
+import type { DailyConfig } from './daily';
 
 export const GAME_DURATION = 300;
 export const TOTAL_CARDS = ITEMS.length;
 
 export type Screen = 'splash' | 'game' | 'results';
+export type Mode = 'classic' | 'daily';
 
 export interface LastEval {
   a: number;
@@ -17,6 +19,9 @@ export interface LastEval {
 
 export interface GameState {
   screen: Screen;
+  mode: Mode;
+  /** The day's challenge, when playing the daily mode. */
+  daily: DailyConfig | null;
   paused: boolean;
   currentCard: number;
   /** Cards in the order they were added to the chain. */
@@ -39,6 +44,7 @@ export interface GameState {
 
 export type GameAction =
   | { type: 'start' }
+  | { type: 'startDaily'; daily: DailyConfig }
   | { type: 'pick'; card: number }
   | { type: 'tick' }
   | { type: 'pause' }
@@ -51,6 +57,8 @@ export type GameAction =
 export function initialState(screen: Screen = 'splash'): GameState {
   return {
     screen,
+    mode: 'classic',
+    daily: null,
     paused: false,
     currentCard: -1,
     path: [],
@@ -88,6 +96,12 @@ function pick(state: GameState, card: number): GameState {
     return { ...state, dupCard: card, dupId: state.dupId + 1 };
   }
 
+  // Daily: the last connection must land on the target.
+  const daily = state.mode === 'daily' ? state.daily : null;
+  if (daily && state.path.length === daily.links && card !== daily.target) {
+    return { ...state, dupCard: card, dupId: state.dupId + 1 };
+  }
+
   if (state.currentCard === -1) {
     return { ...state, currentCard: card, path: [card], dupCard: -1 };
   }
@@ -101,17 +115,17 @@ function pick(state: GameState, card: number): GameState {
   // A new edge a–b closes a triangle with every existing neighbour of a or b:
   // n–a–b reveals the hidden chain connection n–b (and a–b–n reveals a–n).
   const found: Connection[] = [];
-  for (const n of state.adj[a] ?? []) {
+  if (!daily) for (const n of state.adj[a] ?? []) {
     const k = pairKey(n, b);
     if (n !== b && !pairs.has(k)) { pairs.add(k); found.push(chainConnection(n, b, a)); }
   }
-  for (const n of state.adj[b] ?? []) {
+  if (!daily) for (const n of state.adj[b] ?? []) {
     const k = pairKey(a, n);
     if (n !== a && !pairs.has(k)) { pairs.add(k); found.push(chainConnection(a, n, b)); }
   }
 
   const path = [...state.path, b];
-  const done = path.length === TOTAL_CARDS;
+  const done = daily ? b === daily.target : path.length === TOTAL_CARDS;
 
   return {
     ...state,
@@ -134,10 +148,14 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'start':
       return initialState('game');
+    case 'startDaily': {
+      const s = action.daily.start;
+      return { ...initialState('game'), mode: 'daily', daily: action.daily, currentCard: s, path: [s] };
+    }
     case 'pick':
       return pick(state, action.card);
     case 'tick':
-      if (state.screen !== 'game' || state.paused) return state;
+      if (state.screen !== 'game' || state.paused || state.mode === 'daily') return state;
       return state.timeLeft <= 1
         ? { ...state, timeLeft: 0, screen: 'results' }
         : { ...state, timeLeft: state.timeLeft - 1 };

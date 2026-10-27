@@ -75,3 +75,31 @@ export function recordGame(prev: Stats, game: GameRecord & { secrets: string[] }
   write(STATS_KEY, stats);
   return { stats, isNewBest: game.total > prev.bestScore && game.total > 0, newSecrets };
 }
+
+// ── Daily challenge ──
+
+export interface DailyResult {
+  key: string;
+  number: number;
+  score: number;
+  best: number;
+  path: number[];
+  levels: string[];
+}
+
+const DAILY_KEY = 'kesher:daily:v1';
+
+export const loadDaily = (): Record<string, DailyResult> => read<Record<string, DailyResult>>(DAILY_KEY, {});
+
+/** Keeps the best attempt per day and folds any secrets found into the lifetime stats. */
+export function recordDaily(prev: Stats, result: DailyResult, secrets: string[]): { stats: Stats; daily: Record<string, DailyResult>; newSecrets: string[] } {
+  const all = loadDaily();
+  const before = all[result.key];
+  if (!before || result.score > before.score) all[result.key] = result;
+  write(DAILY_KEY, all);
+  const known = new Set(prev.secrets);
+  const newSecrets = secrets.filter(k => !known.has(k));
+  const stats: Stats = { ...prev, secrets: [...prev.secrets, ...newSecrets] };
+  write(STATS_KEY, stats);
+  return { stats, daily: all, newSecrets };
+}

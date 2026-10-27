@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, MILESTONES, levelColor, type Level } from '../game/gameItems';
 import { analyzePersonality, type Connection } from '../game/personality';
-import { SECRET_KEYS, readingsFor } from '../game/evaluator';
+import { SECRET_KEYS, readingsFor, evaluate } from '../game/evaluator';
 import type { RecordResult, Stats } from '../lib/storage';
-import { buildShareText, shareText, type ShareOutcome } from '../lib/share';
+import { buildShareText, buildDailyShareText, shareText, type ShareOutcome } from '../lib/share';
 import ConnectionLines from './ConnectionLines';
 import AnimatedNumber from './AnimatedNumber';
+import type { DailyConfig } from '../game/daily';
 import Glyph from './Glyph';
 import Rich from './Rich';
 import { markLead } from '../lib/marker';
@@ -21,6 +22,10 @@ interface ResultsScreenProps {
   record: RecordResult | null;
   onPlayAgain: () => void;
   onMenu: () => void;
+  /** Set when the game was the daily challenge. */
+  daily?: DailyConfig | null;
+  path?: number[];
+  onDaily?: () => void;
 }
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -65,7 +70,7 @@ function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'di
 }
 
 export default function ResultsScreen({
-  directConns, chainConns, score, chainScore, stats, record, onPlayAgain, onMenu,
+  directConns, chainConns, score, chainScore, stats, record, onPlayAgain, onMenu, daily = null, path = [], onDaily = onPlayAgain,
 }: ResultsScreenProps) {
   const [shareState, setShareState] = useState<ShareOutcome | null>(null);
   const [openLog, setOpenLog] = useState<number | null>(null);
@@ -102,6 +107,9 @@ export default function ResultsScreen({
 
   return (
     <main className="mx-auto max-w-[860px] px-5 pb-20 pt-10 md:pt-16">
+      {daily ? (
+        <DailyHeadline daily={daily} path={path} directConns={directConns} onPlayAgain={onDaily} onMenu={onMenu} />
+      ) : (<>
       {/* Headline figure */}
       <section className="grid grid-cols-[minmax(0,1fr)] items-end gap-8 md:grid-cols-[minmax(0,1fr)_auto]">
         <div>
@@ -143,6 +151,7 @@ export default function ResultsScreen({
           );
         })}
       </ol>
+      </>)}
 
       <div className="mt-16 grid grid-cols-[minmax(0,1fr)] gap-14">
         {record && record.newSecrets.length > 0 && (
@@ -255,7 +264,7 @@ export default function ResultsScreen({
           </Section>
         )}
 
-        {history.length > 1 && (
+        {!daily && history.length > 1 && (
           <Section n={next()} kicker="היסטוריה" title="משחקים אחרונים">
             <div className="flex h-36 items-end gap-2 border-b border-foreground/70" aria-hidden="true">
               {history.map((h, i) => {
@@ -279,5 +288,71 @@ export default function ResultsScreen({
         )}
       </div>
     </main>
+  );
+}
+
+function ChainRow({ path, levels }: { path: number[]; levels: Level[] }) {
+  return (
+    <ol className="flex items-start" aria-label={path.map(i => ITEMS[i].l).join(', ')}>
+      {path.map((card, k) => (
+        <li key={k} className="flex flex-1 items-start last:flex-none">
+          <span className="flex w-12 flex-col items-center gap-1 sm:w-14">
+            <Glyph i={card} size={36} />
+            <span className="truncate text-[0.7rem] text-muted-foreground">{ITEMS[card].l}</span>
+          </span>
+          {k < path.length - 1 && (
+            <span className="mt-[18px] h-[2px] flex-1" style={{ background: levels[k] ? levelColor(levels[k]) : 'hsl(var(--border))' }} />
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function DailyHeadline({ daily, path, directConns, onPlayAgain, onMenu }: {
+  daily: DailyConfig; path: number[]; directConns: Connection[]; onPlayAgain: () => void; onMenu: () => void;
+}) {
+  const [share, setShare] = useState<ShareOutcome | null>(null);
+  const score = directConns.reduce((s, c) => s + c.ev.sc, 0);
+  const pct = daily.best > 0 ? Math.round((score / daily.best) * 100) : 0;
+  const reached = path[path.length - 1] === daily.target;
+  const bestLevels = daily.bestPath.slice(1).map((b, i) => evaluate(daily.bestPath[i], b).lv);
+  const onShare = async () => {
+    setShare(await shareText(buildDailyShareText({ number: daily.number, score, best: daily.best, levels: directConns.map(c => c.ev.lv) })));
+    setTimeout(() => setShare(null), 2500);
+  };
+  return (
+    <section>
+      <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="label-mono flex items-center gap-3">
+        <span className="h-px w-8 bg-foreground/40" />
+        סיום! · אתגר יומי <span className="num-mono">#{daily.number}</span>
+      </motion.h1>
+      <div className="mt-4 flex items-end gap-4">
+        <AnimatedNumber value={score} duration={1.4} className="display-num text-[7rem] font-thin sm:text-[9rem]" />
+        <span className="display-num mb-3 text-4xl text-muted-foreground" dir="ltr">/{daily.best}</span>
+      </div>
+      <p className="mt-2 text-2xl font-extralight">
+        <mark className="hl">{pct}% מהמקסימום</mark> {reached ? 'של היום' : 'לפני שהגעתם ליעד'}
+      </p>
+
+      <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8">
+        <div>
+          <p className="label-mono mb-3">השרשרת שלכם</p>
+          <ChainRow path={path} levels={directConns.map(c => c.ev.lv)} />
+        </div>
+        <div>
+          <p className="label-mono mb-3">השרשרת העמוקה ביותר היום · <span className="num-mono">{daily.best}</span></p>
+          <ChainRow path={daily.bestPath} levels={bestLevels} />
+        </div>
+      </div>
+
+      <div className="mt-10 flex flex-wrap gap-3">
+        <button onClick={onShare} className="btn btn-primary h-12 px-8 text-base">
+          {share === 'copied' ? 'התוצאה הועתקה' : share === 'shared' ? 'שותף' : 'שיתוף התוצאה'}
+        </button>
+        <button onClick={onPlayAgain} className="btn btn-ghost h-12 px-6 text-sm">לנסות שוב</button>
+        <button onClick={onMenu} className="btn btn-text h-12 px-3 text-sm">לדף הבית</button>
+      </div>
+    </section>
   );
 }

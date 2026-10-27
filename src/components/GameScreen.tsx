@@ -13,7 +13,6 @@ import Glyph from './Glyph';
 import Rich from './Rich';
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
-import PauseDialog from './PauseDialog';
 import AnimatedNumber from './AnimatedNumber';
 
 interface GameScreenProps {
@@ -50,6 +49,7 @@ export default function GameScreen({
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const { lastEval } = state;
+  const daily = state.mode === 'daily' ? state.daily : null;
   const isUrgent = state.timeLeft <= 30;
 
   // Collapse the explanation and surface chain discoveries on every new connection.
@@ -62,6 +62,14 @@ export default function GameScreen({
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per connection
   }, [lastEval?.id]);
+
+  // Escape resumes a stopped clock.
+  useEffect(() => {
+    if (!state.paused) return;
+    const onKey = (e: globalThis.KeyboardEvent) => { if (e.key === 'Escape') onResume(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state.paused, onResume]);
 
   const levelsFor = (idx: number) => state.directConns.filter(c => c.a === idx || c.b === idx).map(c => c.ev.lv);
 
@@ -106,25 +114,73 @@ export default function GameScreen({
     <div className="flex min-h-0 flex-col gap-3">
       {/* Instrument panel */}
       <section className="panel flex-shrink-0" aria-label="מצב המשחק">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-stretch">
-          <Figure label="זמן" role="timer" ariaLabel={`זמן שנותר ${formatTime(state.timeLeft)}`}>
-            <span className={`num-mono text-[1.35rem] font-light ${isUrgent ? 'animate-blink' : ''}`} dir="ltr">{formatTime(state.timeLeft)}</span>
-          </Figure>
-          <Figure label="ניקוד" divider>
-            <AnimatedNumber value={totalScore} className="display-num text-[2.4rem]" />
-          </Figure>
-          <Figure label="קשרים" divider>
-            <span className="num-mono text-[1.35rem] font-light" dir="ltr">{pad2(state.directConns.length)}</span>
-          </Figure>
-          <Figure label="שרשרת" divider>
-            <span className="num-mono text-[1.35rem] font-light" style={{ color: 'hsl(var(--chain))' }} dir="ltr">+{state.chainScore}</span>
-          </Figure>
-          <div className="flex items-center border-r border-border px-2.5">
-            <button onClick={onPause} className="btn btn-text h-9 px-1.5 text-sm" aria-label="השהיה ותפריט">השהיה</button>
+        {daily ? (
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-stretch">
+            <Figure label={`אתגר יומי ${daily.number}`}>
+              <span className="flex items-center gap-1.5 text-[1.05rem] font-light">
+                <Glyph i={daily.start} size={22} />
+                <span className="h-px w-3 bg-foreground/40" />
+                <Glyph i={daily.target} size={22} />
+              </span>
+            </Figure>
+            <Figure label="ניקוד" divider>
+              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem]" />
+            </Figure>
+            <Figure label="קשרים" divider>
+              <span className="num-mono text-[1.35rem] font-light" dir="ltr">{state.directConns.length}/{daily.links}</span>
+            </Figure>
+            <div className="flex items-center border-r border-border px-2.5">
+              <button onClick={onMenu} className="btn btn-text h-9 px-1.5 text-sm">יציאה</button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-stretch">
+            <button
+              type="button"
+              onClick={state.paused ? onResume : onPause}
+              className="text-right transition-colors hover:bg-surface-2"
+              aria-label={state.paused ? 'המשך השעון' : 'עצירת השעון'}
+            >
+              <Figure label={state.paused ? 'עצור' : 'זמן'} role="timer" ariaLabel={`זמן שנותר ${formatTime(state.timeLeft)}`}>
+                <span className={`num-mono text-[1.35rem] font-light ${isUrgent && !state.paused ? 'animate-blink' : ''} ${state.paused ? 'text-muted-foreground' : ''}`} dir="ltr">{formatTime(state.timeLeft)}</span>
+              </Figure>
+            </button>
+            <Figure label="ניקוד" divider>
+              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem]" />
+            </Figure>
+            <Figure label="קשרים" divider>
+              <span className="num-mono text-[1.35rem] font-light" dir="ltr">{pad2(state.directConns.length)}</span>
+            </Figure>
+            <Figure label="שרשרת" divider>
+              <span className="num-mono text-[1.35rem] font-light" style={{ color: 'hsl(var(--chain))' }} dir="ltr">+{state.chainScore}</span>
+            </Figure>
+            <div className="flex items-center border-r border-border px-2">
+              <button
+                onClick={state.paused ? onResume : onPause}
+                aria-pressed={state.paused}
+                className={`btn h-9 px-2.5 text-sm ${state.paused ? 'btn-primary' : 'btn-ghost'}`}
+              >
+                {state.paused ? 'המשך' : 'עצירה'}
+              </button>
+            </div>
+          </div>
+        )}
 
-        {/* Two tracks: time remaining and milestones */}
+        {/* Two tracks: time remaining and milestones (classic) or links used (daily) */}
+        {daily ? (
+          <div className="px-3 pb-2.5 pt-2 sm:px-4">
+            <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${daily.links}, minmax(0,1fr))` }}>
+              {Array.from({ length: daily.links }, (_, k) => {
+                const c = state.directConns[k];
+                return <span key={k} className="h-[3px]" style={{ background: c ? levelColor(c.ev.lv) : 'hsl(var(--surface-3))' }} />;
+              })}
+            </div>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="label-mono">מ{ITEMS[daily.start].l} אל {ITEMS[daily.target].l}</span>
+              <span className="label-mono">מקסימום היום · <span dir="ltr">{daily.best}</span></span>
+            </div>
+          </div>
+        ) : (<>
         <div className="relative h-px bg-border">
           <motion.div
             className="absolute inset-y-0 right-0 bg-foreground"
@@ -134,6 +190,7 @@ export default function GameScreen({
           />
         </div>
         <MilestoneTrack total={totalScore} current={currentMilestone} next={nextMilestone} />
+        </>)}
       </section>
 
       {/* Legend */}
@@ -145,11 +202,21 @@ export default function GameScreen({
             <span className="num-mono text-[0.66rem] text-muted-foreground">{SCORE_VALUES[lv]}</span>
           </span>
         ))}
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 border-t border-dashed" style={{ borderColor: 'hsl(var(--chain))' }} />
-          <span className="text-[0.78rem]" style={{ color: 'hsl(var(--chain))' }}>שרשרת</span>
-          <span className="num-mono text-[0.66rem] text-muted-foreground" dir="ltr">{Math.round(CHAIN_RATIO * 100)}%</span>
-        </span>
+        {!daily && (
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 border-t border-dashed" style={{ borderColor: 'hsl(var(--chain))' }} />
+            <span className="text-[0.78rem]" style={{ color: 'hsl(var(--chain))' }}>שרשרת</span>
+            <span className="num-mono text-[0.66rem] text-muted-foreground" dir="ltr">{Math.round(CHAIN_RATIO * 100)}%</span>
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={() => onSettings({ labels: !settings.labels })}
+          aria-pressed={settings.labels}
+          className={`rounded-[2px] border px-2 py-0.5 text-[0.74rem] transition-colors ${settings.labels ? 'border-foreground text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
+        >
+          {settings.labels ? 'הסתרת שמות' : 'הצגת שמות'}
+        </button>
       </div>
 
       {/* Board */}
@@ -175,6 +242,7 @@ export default function GameScreen({
               const order = inChain ? state.path.indexOf(i) + 1 : null;
               const levels = levelsFor(i);
               const showName = settings.labels || isActive;
+              const isTarget = daily?.target === i && !inChain;
 
               return (
                 <motion.button
@@ -186,7 +254,7 @@ export default function GameScreen({
                   onClick={() => onPick(i)}
                   aria-pressed={isActive}
                   aria-disabled={isUsed}
-                  aria-label={`${item.l}${order ? `, מקום ${order} בשרשרת` : ''}${isActive ? ', הכרטיס הנוכחי' : ''}`}
+                  aria-label={`${item.l}${order ? `, מקום ${order} בשרשרת` : ''}${isActive ? ', הכרטיס הנוכחי' : ''}${isTarget ? ', היעד' : ''}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.012, duration: 0.5, ease: EASE }}
@@ -199,6 +267,11 @@ export default function GameScreen({
                   }`}
                 >
                   {isDup && <span key={state.dupId} className="animate-dup-flash absolute inset-0 rounded-[2px] border border-foreground" aria-hidden="true" />}
+                  {isTarget && (
+                    <span className="pointer-events-none absolute inset-[-1px] rounded-[2px] border-2" style={{ borderColor: 'hsl(var(--gold))' }} aria-hidden="true">
+                      <span className="label-mono absolute -top-[0.55rem] left-1/2 -translate-x-1/2 bg-surface-1 px-1" style={{ color: 'hsl(var(--gold))' }}>יעד</span>
+                    </span>
+                  )}
 
                   <span className="flex items-start justify-between" aria-hidden="true">
                     <span className={`num-mono leading-none ${isActive ? 'text-background/60' : 'text-muted-foreground/70'}`} style={{ fontSize: 'clamp(0.48rem, 1.3vw, 0.6rem)' }} dir="ltr">
@@ -221,8 +294,8 @@ export default function GameScreen({
                     />
                     {showName && (
                       <span
-                        className={`block max-w-full truncate text-center leading-none ${isActive ? 'font-normal' : 'font-light'}`}
-                        style={{ fontSize: 'clamp(0.62rem, 2.7vw, 0.92rem)' }}
+                        className={`block max-w-full truncate text-center leading-none font-light ${isActive ? 'text-background/75' : 'text-muted-foreground'}`}
+                        style={{ fontSize: 'clamp(0.56rem, 2.3vw, 0.76rem)' }}
                       >
                         {item.l}
                       </span>
@@ -237,6 +310,29 @@ export default function GameScreen({
             })}
           </div>
 
+          <AnimatePresence>
+            {state.paused && (
+              <motion.div
+                key="veil"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: EASE }}
+                className="absolute inset-0 z-[40] flex flex-col items-center justify-center gap-4 rounded-[2px] px-6 text-center backdrop-blur-md"
+                style={{ background: 'hsl(var(--background) / 0.82)' }}
+                role="dialog"
+                aria-label="השעון עצור"
+              >
+                <p className="label-mono">השעון עצור</p>
+                <p className="num-mono text-4xl font-light" dir="ltr">{formatTime(state.timeLeft)}</p>
+                <button onClick={onResume} className="btn btn-primary h-12 px-10 text-base" autoFocus>המשך</button>
+                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+                  <button onClick={onFinish} className="btn btn-text h-9 text-sm">סיים עכשיו וראה תוצאות</button>
+                  <button onClick={onMenu} className="btn btn-text h-9 text-sm">חזרה לדף הבית</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="mt-2.5 h-5 text-center text-[0.8rem] text-muted-foreground">
@@ -255,9 +351,13 @@ export default function GameScreen({
               </motion.p>
             ) : (
               <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}>
-                {state.currentCard === -1
-                  ? 'בחרו מילה ראשונה כדי לפתוח את השרשרת'
-                  : <>מ<span className="text-foreground">{ITEMS[state.currentCard].l}</span> אל המילה הבאה <span className="num-mono mr-1" dir="ltr">{pad2(state.path.length)}/{TOTAL_CARDS}</span></>}
+                {daily
+                  ? state.path.length === daily.links
+                    ? <>הקשר האחרון חייב להגיע אל <span className="text-foreground">{ITEMS[daily.target].l}</span></>
+                    : <>מ<span className="text-foreground">{ITEMS[state.currentCard].l}</span> אל <span className="text-foreground">{ITEMS[daily.target].l}</span>, נותרו <span className="num-mono" dir="ltr">{daily.links - state.directConns.length}</span> קשרים</>
+                  : state.currentCard === -1
+                    ? 'בחרו מילה ראשונה כדי לפתוח את השרשרת'
+                    : <>מ<span className="text-foreground">{ITEMS[state.currentCard].l}</span> אל המילה הבאה <span className="num-mono mr-1" dir="ltr">{pad2(state.path.length)}/{TOTAL_CARDS}</span></>}
               </motion.p>
             )}
           </AnimatePresence>
@@ -373,7 +473,6 @@ export default function GameScreen({
         </DialogContent>
       </Dialog>
 
-      <PauseDialog open={state.paused} settings={settings} onResume={onResume} onFinish={onFinish} onMenu={onMenu} onSettings={onSettings} />
     </div>
   );
 }
