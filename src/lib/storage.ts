@@ -6,6 +6,8 @@ export interface GameRecord {
   connections: number;
   chains: number;
   personality: string | null;
+  /** Share of direct connections at drash or sod (0..1). Missing on records from older versions. */
+  deep?: number;
 }
 
 export interface Stats {
@@ -26,7 +28,7 @@ export interface Settings {
 
 const STATS_KEY = 'kesher:stats:v1';
 const SETTINGS_KEY = 'kesher:settings:v1';
-const HISTORY_LIMIT = 20;
+const HISTORY_LIMIT = 100;
 
 export const DEFAULT_STATS: Stats = { gamesPlayed: 0, bestScore: 0, totalConnections: 0, secrets: [], history: [] };
 export const DEFAULT_SETTINGS: Settings = { sound: true, haptics: true, labels: false };

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from '../../App';
 
@@ -26,5 +26,14 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'סיום!' })).toBeInTheDocument();
     expect(await screen.findByText('שיא אישי חדש')).toBeInTheDocument();
     expect(JSON.parse(localStorage.getItem('kesher:stats:v1')!).gamesPlayed).toBe(1);
+
+    // Joining the board sends the game just finished.
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ best: 30, rank: 2 }) });
+    vi.stubGlobal('fetch', fetchMock);
+    fireEvent.change(screen.getByRole('textbox', { name: 'כינוי לטבלה' }), { target: { value: 'ענת' } });
+    fireEvent.click(screen.getByRole('button', { name: 'הצטרפות לתחרות' }));
+    expect(await screen.findByText('מקום 2')).toBeInTheDocument();
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({ p_name: 'ענת', p_mode: 'classic' });
+    vi.unstubAllGlobals();
   });
 });

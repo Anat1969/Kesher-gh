@@ -13,6 +13,9 @@ import { useGame } from '../context/GameContext';
 import Glyph from './Glyph';
 import Rich from './Rich';
 import { markLead } from '../lib/marker';
+import { CompetitionCard } from './Competition';
+import LearningChart from './LearningChart';
+import { trendLine } from '../lib/learning';
 
 interface ResultsScreenProps {
   directConns: Connection[];
@@ -89,8 +92,6 @@ export default function ResultsScreen({
   const maxCnt = Math.max(1, ...LEVEL_ORDER.map(l => cnt[l]));
 
   const allConns = [...directConns, ...chainConns];
-  const history = stats.history.slice(0, 12).reverse();
-  const histMax = Math.max(1, ...history.map(h => h.total));
 
   const onShare = async () => {
     const text = buildShareText({ total, directConns, chainCount: chainConns.length, personality, best: personality?.best });
@@ -153,6 +154,8 @@ export default function ResultsScreen({
         })}
       </ol>
       </>)}
+
+      {directConns.length > 0 && <CompetitionCard mode={daily ? 'daily' : 'classic'} />}
 
       <div className="mt-16 grid grid-cols-[minmax(0,1fr)] gap-14">
         {record && record.newSecrets.length > 0 && (
@@ -265,26 +268,11 @@ export default function ResultsScreen({
           </Section>
         )}
 
-        {!daily && history.length > 1 && (
-          <Section n={next()} kicker="היסטוריה" title="משחקים אחרונים">
-            <div className="flex h-36 items-end gap-2 border-b border-foreground/70" aria-hidden="true">
-              {history.map((h, i) => {
-                const last = i === history.length - 1;
-                return (
-                  <div key={h.date} className="flex h-full flex-1 flex-col justify-end gap-1.5">
-                    <span className={`num-mono text-center text-[0.6rem] ${last ? 'text-foreground' : 'text-muted-foreground'}`} dir="ltr">{h.total}</span>
-                    <motion.div
-                      className={last ? 'bg-foreground' : 'bg-foreground/20'}
-                      initial={{ height: 0 }}
-                      whileInView={{ height: `${Math.max(2, (h.total / histMax) * 80)}%` }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.04, duration: 0.8, ease: EASE }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <p className="sr-only">ציונים אחרונים: {history.map(h => h.total).join(', ')}</p>
+        {!daily && stats.history.length > 1 && (
+          <Section n={next()} kicker="גרף למידה" title="לאן אתם מתקדמים">
+            <p className="-mt-3 mb-6 text-lg font-light"><Rich text={trendLine([...stats.history].reverse().map(h => h.total))} /></p>
+            <LearningChart history={stats.history} compact />
+            <Link to="/scores" className="label-mono link-draw mt-4 inline-block">הגרף המלא והטבלה</Link>
           </Section>
         )}
       </div>
