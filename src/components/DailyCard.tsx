@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ITEMS } from '../game/gameItems';
-import { dailyFor, dateKey } from '../game/daily';
+import { dailyFor, dateKey, lastDays, streak } from '../game/daily';
 import type { DailyResult } from '../lib/storage';
 import { buildDailyShareText, shareText, type ShareOutcome } from '../lib/share';
 import Glyph from './Glyph';
@@ -10,6 +10,8 @@ import Glyph from './Glyph';
 export default function DailyCard({ results, onStart }: { results: Record<string, DailyResult>; onStart: () => void }) {
   const today = dailyFor(dateKey());
   const done = results[today.key];
+  const run = streak(Object.keys(results));
+  const days = lastDays(14);
   const [share, setShare] = useState<ShareOutcome | null>(null);
 
   const onShare = async () => {
@@ -46,6 +48,32 @@ export default function DailyCard({ results, onStart }: { results: Record<string
           ))}
           <span className="h-px flex-1 bg-border" />
           <Glyph i={today.target} size={40} />
+        </div>
+
+        <div className="mt-7">
+          <div className="flex items-baseline justify-between">
+            <span className="label-mono">יומן · 14 ימים</span>
+            <span className="label-mono">
+              {run > 0 ? <>רצף · <mark className="hl num-mono">{run}</mark> {run === 1 ? 'יום' : 'ימים'}</> : 'התחילו רצף היום'}
+            </span>
+          </div>
+          <ol className="mt-2 grid grid-cols-[repeat(14,minmax(0,1fr))] gap-1" aria-label="יומן האתגרים">
+            {days.map(k => {
+              const r = results[k];
+              const pct = r && r.best ? r.score / r.best : 0;
+              const isToday = k === today.key;
+              return (
+                <li key={k} className="flex flex-col items-center gap-1" title={r ? `#${r.number} · ${r.score}/${r.best}` : undefined}>
+                  <span
+                    className={`block aspect-square w-full rounded-[2px] ${r ? '' : 'border border-dashed border-border'} ${isToday ? 'outline outline-1 outline-offset-1 outline-foreground' : ''}`}
+                    style={r ? { background: `hsl(var(--gold) / ${0.2 + pct * 0.8})` } : undefined}
+                    aria-label={r ? `${k}: ${r.score} מתוך ${r.best}` : `${k}: לא שוחק`}
+                  />
+                  <span className="num-mono text-[0.58rem] text-muted-foreground" dir="ltr">{Number(k.slice(8))}</span>
+                </li>
+              );
+            })}
+          </ol>
         </div>
       </div>
 

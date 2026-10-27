@@ -91,3 +91,22 @@ export function dailyFor(key = dateKey()): DailyConfig {
   cache.set(key, cfg);
   return cfg;
 }
+
+const shiftDay = (key: string, delta: number) => {
+  const [y, m, d] = key.split('-').map(Number);
+  return dateKey(new Date(y, m - 1, d + delta));
+};
+
+/** Consecutive days with a finished daily, ending today (or yesterday, if today is still open). */
+export function streak(playedKeys: Iterable<string>, today = dateKey()): number {
+  const played = new Set(playedKeys);
+  let day = played.has(today) ? today : shiftDay(today, -1);
+  let n = 0;
+  while (played.has(day)) { n++; day = shiftDay(day, -1); }
+  return n;
+}
+
+/** The last `count` days, oldest first, ending today. */
+export function lastDays(count: number, today = dateKey()): string[] {
+  return Array.from({ length: count }, (_, k) => shiftDay(today, k - count + 1));
+}

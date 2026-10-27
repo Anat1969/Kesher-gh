@@ -17,7 +17,10 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      // The app registers the worker itself (src/components/UpdateNotice.tsx): it checks for a new
+      // version on every return to the app and reloads into it as soon as it is installed.
       registerType: "autoUpdate",
+      injectRegister: false,
       includeAssets: ["icon.svg", "apple-touch-icon.png", "favicon-48.png"],
       manifest: {
         name: "קֶשֶׁר — משחק הקשרים",
@@ -41,6 +44,7 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         globIgnores: ["**/og-image.png"],
         navigateFallback: "/index.html",
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             // Google Fonts stylesheets and font files — cache so the game works offline.

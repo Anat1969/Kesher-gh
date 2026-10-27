@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dailyFor, dateKey, dayNumber, bestChain, DAILY_LINKS } from '../daily';
+import { dailyFor, dateKey, dayNumber, bestChain, DAILY_LINKS, streak, lastDays } from '../daily';
 import { gameReducer, initialState, type GameAction } from '../engine';
 import { evaluate } from '../evaluator';
 
@@ -44,5 +44,19 @@ describe('daily challenge', () => {
     const done = gameReducer(s, { type: 'pick', card: d.target });
     expect(done.screen).toBe('results');
     expect(done.chainConns).toHaveLength(0);
+  });
+});
+
+describe('streak and journal days', () => {
+  it('counts consecutive days ending today or yesterday', () => {
+    expect(streak([], '2026-11-03')).toBe(0);
+    expect(streak(['2026-11-03'], '2026-11-03')).toBe(1);
+    expect(streak(['2026-11-01', '2026-11-02'], '2026-11-03')).toBe(2);
+    expect(streak(['2026-10-31', '2026-11-02', '2026-11-03'], '2026-11-03')).toBe(2);
+    expect(streak(['2026-10-30', '2026-10-31'], '2026-11-03')).toBe(0);
+  });
+
+  it('lists the last days across month ends', () => {
+    expect(lastDays(3, '2026-11-01')).toEqual(['2026-10-30', '2026-10-31', '2026-11-01']);
   });
 });

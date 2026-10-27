@@ -17,7 +17,7 @@ describe('App', () => {
     expect((await screen.findAllByText('סוֹד')).length).toBeGreaterThan(0);
     expect((await screen.findAllByText('סוד חדש נחשף')).length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'עצירה' }));
+    fireEvent.click(screen.getByRole('button', { name: 'עצירת השעון' }));
     expect(await screen.findByText('השעון עצור')).toBeInTheDocument();
     await act(async () => {
       fireEvent.click(await screen.findByRole('button', { name: 'סיים עכשיו וראה תוצאות' }));

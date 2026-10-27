@@ -8,7 +8,8 @@ import type { RecordResult, Stats } from '../lib/storage';
 import { buildShareText, buildDailyShareText, shareText, type ShareOutcome } from '../lib/share';
 import ConnectionLines from './ConnectionLines';
 import AnimatedNumber from './AnimatedNumber';
-import type { DailyConfig } from '../game/daily';
+import { streak, type DailyConfig } from '../game/daily';
+import { useGame } from '../context/GameContext';
 import Glyph from './Glyph';
 import Rich from './Rich';
 import { markLead } from '../lib/marker';
@@ -317,6 +318,8 @@ function DailyHeadline({ daily, path, directConns, onPlayAgain, onMenu }: {
   const pct = daily.best > 0 ? Math.round((score / daily.best) * 100) : 0;
   const reached = path[path.length - 1] === daily.target;
   const bestLevels = daily.bestPath.slice(1).map((b, i) => evaluate(daily.bestPath[i], b).lv);
+  const { dailyResults } = useGame();
+  const run = streak(Object.keys(dailyResults));
   const onShare = async () => {
     setShare(await shareText(buildDailyShareText({ number: daily.number, score, best: daily.best, levels: directConns.map(c => c.ev.lv) })));
     setTimeout(() => setShare(null), 2500);
@@ -334,6 +337,7 @@ function DailyHeadline({ daily, path, directConns, onPlayAgain, onMenu }: {
       <p className="mt-2 text-2xl font-extralight">
         <mark className="hl">{pct}% מהמקסימום</mark> {reached ? 'של היום' : 'לפני שהגעתם ליעד'}
       </p>
+      {run > 0 && <p className="label-mono mt-3">רצף · <span className="num-mono text-foreground">{run}</span> {run === 1 ? 'יום' : 'ימים'} · מחר אתגר חדש</p>}
 
       <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-8">
         <div>
