@@ -34,12 +34,16 @@
 - Imagery (2026-10-27): card drawings are soft, free, hand-drawn gold lines with a light gold wash
   (`Glyph` tone="gold", `--gold`). The board shows images only; names are an option in the A&I
   menu and appear on the selected card. App icon and share image use the same gold-on-ink language.
-- Game controls (2026-10-27): a "הצגת שמות / הסתרת שמות" button sits by the legend (owner asked
-  for a button; names show small and grey under each drawing). The clock has a direct "עצירה /
-  המשך" control in the instrument panel; while stopped a veil hides the board (no free thinking time).
+- Game controls (2026-10-27): the controls a player reaches for most are large and always in the
+  same place: a two-button strip at the bottom of the instrument panel, "עצירה / המשך" (with the
+  time) and "הצגת שמות / הסתרת שמות" (names small and grey under each drawing). While stopped a
+  veil hides the board (no free thinking time). Design primary actions as primary, never as small text.
+- Updates (2026-10-27): the installed app must never show an old version. The service worker is
+  registered by `src/components/UpdateNotice.tsx` (auto-update, checks on every return to the app);
+  `vercel.json` serves `sw.js` uncached.
 - Daily challenge (2026-10-27): same start, target and 5-link length for everyone each day
   (`src/game/daily.ts`, seeded by date), no clock, last link must land on the target, score shown
-  against the day's computed maximum and its best chain; results kept per day in localStorage.
+  against the day's computed maximum and its best chain; results kept per day in localStorage, with a streak and a 14-day journal strip on the home card.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## What "upgrade" means here

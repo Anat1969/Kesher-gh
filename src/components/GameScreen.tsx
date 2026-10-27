@@ -115,7 +115,7 @@ export default function GameScreen({
       {/* Instrument panel */}
       <section className="panel flex-shrink-0" aria-label="מצב המשחק">
         {daily ? (
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-stretch">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-stretch">
             <Figure label={`אתגר יומי ${daily.number}`}>
               <span className="flex items-center gap-1.5 text-[1.05rem] font-light">
                 <Glyph i={daily.start} size={22} />
@@ -124,29 +124,19 @@ export default function GameScreen({
               </span>
             </Figure>
             <Figure label="ניקוד" divider>
-              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem]" />
+              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem] [@media(max-height:760px)]:text-[1.8rem]" />
             </Figure>
             <Figure label="קשרים" divider>
               <span className="num-mono text-[1.35rem] font-light" dir="ltr">{state.directConns.length}/{daily.links}</span>
             </Figure>
-            <div className="flex items-center border-r border-border px-2.5">
-              <button onClick={onMenu} className="btn btn-text h-9 px-1.5 text-sm">יציאה</button>
-            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto_auto] items-stretch">
-            <button
-              type="button"
-              onClick={state.paused ? onResume : onPause}
-              className="text-right transition-colors hover:bg-surface-2"
-              aria-label={state.paused ? 'המשך השעון' : 'עצירת השעון'}
-            >
-              <Figure label={state.paused ? 'עצור' : 'זמן'} role="timer" ariaLabel={`זמן שנותר ${formatTime(state.timeLeft)}`}>
-                <span className={`num-mono text-[1.35rem] font-light ${isUrgent && !state.paused ? 'animate-blink' : ''} ${state.paused ? 'text-muted-foreground' : ''}`} dir="ltr">{formatTime(state.timeLeft)}</span>
-              </Figure>
-            </button>
+          <div className="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-stretch">
+            <Figure label={state.paused ? 'עצור' : 'זמן'} role="timer" ariaLabel={`זמן שנותר ${formatTime(state.timeLeft)}`}>
+              <span className={`num-mono text-[1.35rem] font-light ${isUrgent && !state.paused ? 'animate-blink' : ''} ${state.paused ? 'text-muted-foreground' : ''}`} dir="ltr">{formatTime(state.timeLeft)}</span>
+            </Figure>
             <Figure label="ניקוד" divider>
-              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem]" />
+              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem] [@media(max-height:760px)]:text-[1.8rem]" />
             </Figure>
             <Figure label="קשרים" divider>
               <span className="num-mono text-[1.35rem] font-light" dir="ltr">{pad2(state.directConns.length)}</span>
@@ -154,15 +144,6 @@ export default function GameScreen({
             <Figure label="שרשרת" divider>
               <span className="num-mono text-[1.35rem] font-light" style={{ color: 'hsl(var(--chain))' }} dir="ltr">+{state.chainScore}</span>
             </Figure>
-            <div className="flex items-center border-r border-border px-2">
-              <button
-                onClick={state.paused ? onResume : onPause}
-                aria-pressed={state.paused}
-                className={`btn h-9 px-2.5 text-sm ${state.paused ? 'btn-primary' : 'btn-ghost'}`}
-              >
-                {state.paused ? 'המשך' : 'עצירה'}
-              </button>
-            </div>
           </div>
         )}
 
@@ -181,7 +162,7 @@ export default function GameScreen({
             </div>
           </div>
         ) : (<>
-        <div className="relative h-px bg-border">
+        <div className="relative h-px bg-border [@media(max-height:760px)]:hidden">
           <motion.div
             className="absolute inset-y-0 right-0 bg-foreground"
             initial={false}
@@ -189,12 +170,37 @@ export default function GameScreen({
             transition={{ duration: 1, ease: 'linear' }}
           />
         </div>
-        <MilestoneTrack total={totalScore} current={currentMilestone} next={nextMilestone} />
+        <div className="[@media(max-height:760px)]:hidden"><MilestoneTrack total={totalScore} current={currentMilestone} next={nextMilestone} /></div>
         </>)}
+
+        {/* The controls a player reaches for most: large, always in the same place */}
+        <div className="grid grid-cols-2 gap-2 border-t border-border p-2 [@media(max-height:760px)]:p-1.5">
+          {daily ? (
+            <button onClick={onMenu} className="btn btn-ghost h-11 text-[0.95rem]">יציאה מהאתגר</button>
+          ) : (
+            <button
+              onClick={state.paused ? onResume : onPause}
+              aria-pressed={state.paused}
+              aria-label={state.paused ? 'המשך השעון' : 'עצירת השעון'}
+              className={`btn h-11 text-[0.95rem] [@media(max-height:760px)]:h-10 ${state.paused ? 'btn-primary' : 'btn-ghost'}`}
+            >
+              <span className="num-mono text-xs text-current opacity-60" dir="ltr">{formatTime(state.timeLeft)}</span>
+              {state.paused ? 'המשך' : 'עצירה'}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onSettings({ labels: !settings.labels })}
+            aria-pressed={settings.labels}
+            className={`btn h-11 text-[0.95rem] [@media(max-height:760px)]:h-10 ${settings.labels ? 'btn-primary' : 'btn-ghost'}`}
+          >
+            {settings.labels ? 'הסתרת שמות' : 'הצגת שמות'}
+          </button>
+        </div>
       </section>
 
       {/* Legend */}
-      <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-x-5 gap-y-1" aria-label="רמות קשר וניקוד">
+      <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-x-5 gap-y-1 [@media(max-height:760px)]:hidden" aria-label="רמות קשר וניקוד">
         {LEVEL_ORDER.map(lv => (
           <span key={lv} className="flex items-center gap-1.5">
             <span className="h-[2px] w-3" style={{ background: levelColor(lv) }} />
@@ -209,21 +215,13 @@ export default function GameScreen({
             <span className="num-mono text-[0.66rem] text-muted-foreground" dir="ltr">{Math.round(CHAIN_RATIO * 100)}%</span>
           </span>
         )}
-        <button
-          type="button"
-          onClick={() => onSettings({ labels: !settings.labels })}
-          aria-pressed={settings.labels}
-          className={`rounded-[2px] border px-2 py-0.5 text-[0.74rem] transition-colors ${settings.labels ? 'border-foreground text-foreground' : 'border-border text-muted-foreground hover:text-foreground'}`}
-        >
-          {settings.labels ? 'הסתרת שמות' : 'הצגת שמות'}
-        </button>
       </div>
 
       {/* Board */}
-      <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center">
+      <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center" style={{ containerType: 'size' }}>
         <div
-          className="well relative w-full p-[clamp(6px,1.8vw,12px)]"
-          style={{ maxWidth: 'min(600px, calc((100dvh - var(--bar-h) - var(--board-chrome)) * 1.05))', minWidth: '272px' }}
+          className="well relative p-[clamp(5px,1.6vw,12px)]"
+          style={{ width: 'min(600px, 100cqw, calc(100cqh - 2.25rem))' }}
         >
           <ConnectionLines directConns={state.directConns} chainConns={state.chainConns} newestId={lastEval?.id ?? 0} />
 
@@ -258,6 +256,7 @@ export default function GameScreen({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.012, duration: 0.5, ease: EASE }}
+                  style={{ containerType: 'inline-size' }}
                   className={`group relative flex aspect-square select-none flex-col justify-between rounded-[2px] border p-[clamp(3px,1vw,6px)] text-right transition-[background-color,color,border-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isActive
                       ? 'z-[3] cursor-default border-foreground bg-foreground text-background shadow-lg'
@@ -290,12 +289,12 @@ export default function GameScreen({
                       size="100%"
                       strokeWidth={isActive ? 1.8 : undefined}
                       className={`aspect-square transition-opacity duration-300 ${isUsed ? 'opacity-40' : ''}`}
-                      style={{ width: showName ? 'clamp(20px, 6.4vw, 36px)' : 'clamp(28px, 10vw, 54px)', height: 'auto' }}
+                      style={{ width: showName ? '46cqw' : '62cqw', height: 'auto' }}
                     />
                     {showName && (
                       <span
                         className={`block max-w-full truncate text-center leading-none font-light ${isActive ? 'text-background/75' : 'text-muted-foreground'}`}
-                        style={{ fontSize: 'clamp(0.56rem, 2.3vw, 0.76rem)' }}
+                        style={{ fontSize: 'clamp(0.5rem, 15cqw, 0.78rem)' }}
                       >
                         {item.l}
                       </span>
@@ -374,7 +373,7 @@ export default function GameScreen({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3, ease: EASE }}
-              className="px-4 py-3"
+              className="px-4 py-3 [@media(max-height:760px)]:py-2"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <div className="flex min-w-0 items-baseline gap-2.5">
@@ -393,7 +392,7 @@ export default function GameScreen({
                   </span>
                 )}
               </div>
-              <p className="mt-1 line-clamp-2 text-[0.84rem] leading-relaxed text-foreground/85"><Rich text={lastEval.ev.insight ?? lastEval.ev.exp} /></p>
+              <p className="mt-1 line-clamp-2 text-[0.84rem] leading-relaxed text-foreground/85 [@media(max-height:760px)]:line-clamp-1"><Rich text={lastEval.ev.insight ?? lastEval.ev.exp} /></p>
               <button type="button" onClick={() => setSheetOpen(true)} className="label-mono link-draw mt-1.5">
                 קריאה מלאה{alternatives > 0 ? ` · עוד ${alternatives} קריאות` : ''}
               </button>
@@ -406,7 +405,7 @@ export default function GameScreen({
         </AnimatePresence>
 
         {recent.length > 0 && (
-          <ul className="scrollbar-none flex gap-4 overflow-x-auto border-t border-border px-4 py-2" aria-label="קשרים אחרונים">
+          <ul className="[@media(max-height:760px)]:hidden scrollbar-none flex gap-4 overflow-x-auto border-t border-border px-4 py-2" aria-label="קשרים אחרונים">
             {recent.map(c => (
               <motion.li
                 key={c.key}
@@ -479,7 +478,7 @@ export default function GameScreen({
 
 function Figure({ label, children, divider, role, ariaLabel }: { label: string; children: React.ReactNode; divider?: boolean; role?: string; ariaLabel?: string }) {
   return (
-    <div role={role} aria-label={ariaLabel} className={`flex min-w-0 flex-col justify-between gap-1.5 px-3 py-2.5 sm:px-4 ${divider ? 'border-r border-border' : ''}`}>
+    <div role={role} aria-label={ariaLabel} className={`flex min-w-0 flex-col justify-between gap-1.5 px-3 py-2.5 sm:px-4 [@media(max-height:760px)]:gap-0.5 [@media(max-height:760px)]:py-1.5 ${divider ? 'border-r border-border' : ''}`}>
       <span className="label-mono">{label}</span>
       {children}
     </div>

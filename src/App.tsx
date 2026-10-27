@@ -4,6 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { useThemeColorMeta } from "./hooks/useThemeColorMeta";
 import { GameProvider } from "./context/GameContext";
 import TopBar from "./components/TopBar";
+import UpdateNotice from "./components/UpdateNotice";
 import { GlyphDefs } from "./components/Glyph";
 import Index from "./pages/Index.tsx";
 import Guide from "./pages/Guide.tsx";
@@ -51,6 +52,7 @@ const App = () => (
       <BrowserRouter>
         <GameProvider>
           <TopBar />
+          <UpdateNotice />
           <div dir="rtl" style={{ paddingTop: 'calc(var(--bar-h) + env(safe-area-inset-top))' }}>
             <AppRoutes />
           </div>
