@@ -43,3 +43,9 @@ export async function shareText(text: string, url = typeof location !== 'undefin
     return 'failed';
   }
 }
+
+/** Spoiler-free daily summary: challenge number, score against today's best, one square per link. */
+export function buildDailyShareText(r: { number: number; score: number; best: number; levels: string[] }): string {
+  const squares = r.levels.map(l => LEVEL_SQUARES[l as Level] ?? '⬜').join('');
+  return [`קֶשֶׁר · אתגר יומי #${r.number}`, `${r.score}/${r.best}`, squares].join('\n');
+}

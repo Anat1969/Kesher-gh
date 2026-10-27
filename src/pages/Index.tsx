@@ -13,7 +13,7 @@ const Index = () => {
   useEffect(() => () => pause(), [pause]);
 
   if (state.screen === 'splash') {
-    return <SplashScreen stats={stats} onStart={game.startGame} />;
+    return <SplashScreen stats={stats} onStart={game.startGame} onDaily={game.startDaily} dailyResults={game.dailyResults} />;
   }
 
   if (state.screen === 'results') {
@@ -26,6 +26,9 @@ const Index = () => {
         stats={stats}
         record={game.lastRecord}
         onPlayAgain={game.startGame}
+        daily={state.mode === 'daily' ? state.daily : null}
+        path={state.path}
+        onDaily={game.startDaily}
         onMenu={game.resetGame}
       />
     );

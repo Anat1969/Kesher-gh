@@ -4,8 +4,9 @@ import { gameReducer, initialState, totalScore as sumScore } from '../game/engin
 import { isHandCraftedSecret, pairKey } from '../game/evaluator';
 import { analyzePersonality } from '../game/personality';
 import { sounds, vibrate } from '../lib/feedback';
+import { dailyFor, dateKey } from '../game/daily';
 import {
-  loadSettings, loadStats, recordGame, saveSettings,
+  loadSettings, loadStats, recordGame, saveSettings, loadDaily, recordDaily, type DailyResult,
   type RecordResult, type Settings, type Stats,
 } from '../lib/storage';
 
@@ -16,6 +17,7 @@ export function useGameState() {
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [stats, setStats] = useState<Stats>(loadStats);
   const [lastRecord, setLastRecord] = useState<RecordResult | null>(null);
+  const [dailyResults, setDailyResults] = useState<Record<string, DailyResult>>(loadDaily);
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -26,7 +28,7 @@ export function useGameState() {
   }, []);
 
   // ── Timer: runs only while a game is active and not paused ──
-  const running = state.screen === 'game' && !state.paused;
+  const running = state.screen === 'game' && !state.paused && state.mode === 'classic';
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => dispatch({ type: 'tick' }), 1000);
@@ -68,6 +70,18 @@ export function useGameState() {
     const secrets = [...state.directConns, ...state.chainConns]
       .filter(c => isHandCraftedSecret(c.a, c.b))
       .map(c => pairKey(c.a, c.b));
+    if (state.mode === 'daily' && state.daily) {
+      const d = state.daily;
+      const rec = recordDaily(loadStats(), {
+        key: d.key, number: d.number, score: state.score, best: d.best, path: state.path,
+        levels: state.directConns.map(c => c.ev.lv),
+      }, secrets);
+      setStats(rec.stats);
+      setDailyResults(rec.daily);
+      setLastRecord({ stats: rec.stats, isNewBest: false, newSecrets: rec.newSecrets });
+      feedback(sounds.finish, [30, 50, 30, 50, 80]);
+      return;
+    }
     const result = recordGame(loadStats(), {
       date: new Date().toISOString(),
       total: sumScore(state),
@@ -82,6 +96,7 @@ export function useGameState() {
   }, [state, feedback]);
 
   const startGame = useCallback(() => { setLastRecord(null); dispatch({ type: 'start' }); }, []);
+  const startDaily = useCallback(() => { setLastRecord(null); dispatch({ type: 'startDaily', daily: dailyFor(dateKey()) }); }, []);
   const resetGame = useCallback(() => dispatch({ type: 'menu' }), []);
   const pause = useCallback(() => dispatch({ type: 'pause' }), []);
   const resume = useCallback(() => dispatch({ type: 'resume' }), []);
@@ -118,6 +133,8 @@ export function useGameState() {
     stats,
     lastRecord,
     startGame,
+    startDaily,
+    dailyResults,
     resetGame,
     pause,
     resume,
