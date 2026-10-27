@@ -10,6 +10,7 @@ import { isHandCraftedSecret, pairKey, readingsFor } from '../game/evaluator';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ReadingPanel from './ReadingPanel';
 import Glyph from './Glyph';
+import Rich from './Rich';
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import PauseDialog from './PauseDialog';
@@ -173,12 +174,14 @@ export default function GameScreen({
               const isDup = state.dupCard === i;
               const order = inChain ? state.path.indexOf(i) + 1 : null;
               const levels = levelsFor(i);
+              const showName = settings.labels || isActive;
 
               return (
                 <motion.button
                   key={i}
                   ref={el => (cardRefs.current[i] = el)}
                   data-card={i}
+                  title={item.l}
                   type="button"
                   onClick={() => onPick(i)}
                   aria-pressed={isActive}
@@ -208,20 +211,22 @@ export default function GameScreen({
                     )}
                   </span>
 
-                  <span aria-hidden="true" className="flex min-h-0 flex-col items-center gap-[clamp(2px,0.6vw,5px)]">
+                  <span aria-hidden="true" className="flex min-h-0 flex-1 flex-col items-center justify-center gap-[clamp(2px,0.6vw,5px)]">
                     <Glyph
                       i={i}
                       size="100%"
-                      strokeWidth={isActive ? 1.4 : 1.2}
-                      className={`aspect-square transition-opacity ${isUsed ? 'opacity-45' : ''}`}
-                      style={{ width: 'clamp(18px, 6vw, 34px)', height: 'auto' }}
+                      strokeWidth={isActive ? 1.8 : undefined}
+                      className={`aspect-square transition-opacity duration-300 ${isUsed ? 'opacity-40' : ''}`}
+                      style={{ width: showName ? 'clamp(20px, 6.4vw, 36px)' : 'clamp(28px, 10vw, 54px)', height: 'auto' }}
                     />
-                    <span
-                      className={`block max-w-full truncate text-center leading-none ${isActive ? 'font-normal' : 'font-light'}`}
-                      style={{ fontSize: 'clamp(0.66rem, 2.9vw, 0.98rem)' }}
-                    >
-                      {item.l}
-                    </span>
+                    {showName && (
+                      <span
+                        className={`block max-w-full truncate text-center leading-none ${isActive ? 'font-normal' : 'font-light'}`}
+                        style={{ fontSize: 'clamp(0.62rem, 2.7vw, 0.92rem)' }}
+                      >
+                        {item.l}
+                      </span>
+                    )}
                   </span>
 
                   <span className="flex h-[2px] gap-[2px]" aria-hidden="true">
@@ -288,7 +293,7 @@ export default function GameScreen({
                   </span>
                 )}
               </div>
-              <p className="mt-1 line-clamp-2 text-[0.84rem] leading-relaxed text-foreground/85">{lastEval.ev.insight ?? lastEval.ev.exp}</p>
+              <p className="mt-1 line-clamp-2 text-[0.84rem] leading-relaxed text-foreground/85"><Rich text={lastEval.ev.insight ?? lastEval.ev.exp} /></p>
               <button type="button" onClick={() => setSheetOpen(true)} className="label-mono link-draw mt-1.5">
                 קריאה מלאה{alternatives > 0 ? ` · עוד ${alternatives} קריאות` : ''}
               </button>

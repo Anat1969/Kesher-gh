@@ -53,6 +53,11 @@
     --level-drash: 16 45% 43%;
     --level-sod: 36 58% 35%;
     --chain: 152 26% 32%;
+
+    /* Content imagery and the reading marker */
+    --gold: 40 62% 42%;
+    --marker: 52 100% 62%;
+    --marker-alpha: 0.55;
   }
 
   .dark {
@@ -92,6 +97,10 @@
     --level-drash: 18 50% 64%;
     --level-sod: 40 52% 60%;
     --chain: 152 26% 58%;
+
+    --gold: 42 64% 62%;
+    --marker: 48 95% 52%;
+    --marker-alpha: 0.32;
   }
 }
 
@@ -208,6 +217,16 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.03em;
     line-height: 0.9;
+  }
+
+  /* Highlighter marker on the words that carry the meaning. */
+  .hl {
+    background: linear-gradient(transparent 52%, hsl(var(--marker) / var(--marker-alpha)) 52%, hsl(var(--marker) / var(--marker-alpha)) 92%, transparent 92%);
+    color: inherit;
+    font-weight: 500;
+    padding: 0 0.08em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   /* Underline link that draws in on hover. */

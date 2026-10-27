@@ -6,12 +6,13 @@ import { evaluate } from '../game/evaluator';
 import { LEVEL_DEFS } from '../game/levelInfo';
 import { useGame } from '../context/GameContext';
 import Glyph from '../components/Glyph';
+import Rich from '../components/Rich';
 
 const STEPS = [
   { title: 'פותחים שרשרת', body: 'בוחרים מילה ראשונה. היא ראש השרשרת.' },
-  { title: 'מחברים את הבאה', body: 'כל מילה חדשה מתחברת לנוכחית. המערכת מסבירה מה הקשר ביניהן, ובאיזה עומק.' },
-  { title: 'ממשיכים עד הסוף', body: `המטרה: כל ${TOTAL_CARDS} המילים בשרשרת אחת, תוך ${GAME_DURATION / 60} דקות. מילה שכבר בשרשרת לא נבחרת שוב.` },
-  { title: 'חושפים סודות', body: 'בין המילים מוסתרים זוגות עם סוד אמיתי מהמדע, מהתרבות או מהמיתוס. כל סוד שנחשף נשמר באוסף.' },
+  { title: 'מחברים את הבאה', body: '**כל מילה חדשה מתחברת לנוכחית**. המערכת מסבירה מה הקשר ביניהן, ובאיזה עומק.' },
+  { title: 'ממשיכים עד הסוף', body: `המטרה: **כל ${TOTAL_CARDS} המילים בשרשרת אחת**, תוך ${GAME_DURATION / 60} דקות. מילה שכבר בשרשרת לא נבחרת שוב.` },
+  { title: 'חושפים סודות', body: 'בין המילים מוסתרים **זוגות עם סוד אמיתי** מהמדע, מהתרבות או מהמיתוס. כל סוד שנחשף נשמר באוסף.' },
 ];
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -43,7 +44,7 @@ export default function Guide() {
         <p className="label-mono flex items-center gap-3"><span className="h-px w-8 bg-foreground/40" />מדריך</p>
         <h1 className="mt-6 text-5xl font-thin leading-[0.95] sm:text-7xl">איך משחקים בקשר</h1>
         <p className="mt-7 text-xl font-light leading-relaxed text-foreground/80">
-          קשר הוא משחק על עומק החשיבה. לא מספיק למצוא קשר; המערכת מודדת כמה הוא עמוק, מהגלוי ועד הנסתר.
+          קשר הוא משחק על עומק החשיבה. לא מספיק למצוא קשר; <mark className="hl">המערכת מודדת כמה הוא עמוק</mark>, מהגלוי ועד הנסתר.
         </p>
       </header>
 
@@ -55,7 +56,7 @@ export default function Guide() {
               <span className="num-mono text-sm text-muted-foreground" dir="ltr" style={{ textAlign: 'right' }}>{pad2(i + 1)}</span>
               <div>
                 <h3 className="text-xl font-light">{s.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground"><Rich text={s.body} /></p>
               </div>
             </motion.li>
           ))}
@@ -84,11 +85,11 @@ export default function Guide() {
                   <dl className="grid grid-cols-[minmax(0,1fr)] gap-4">
                     <div>
                       <dt className="label-mono mb-1">הגדרה</dt>
-                      <dd className="text-xl font-light leading-snug">{def.definition}</dd>
+                      <dd className="text-xl font-light leading-snug"><Rich text={def.definition} /></dd>
                     </div>
                     <div className="border-r-2 pr-3" style={{ borderColor: levelColor(lv) }}>
                       <dt className="label-mono mb-1">שאלת המבחן</dt>
-                      <dd className="text-base">{def.test}</dd>
+                      <dd className="text-base"><Rich text={def.test} /></dd>
                     </div>
                     <div>
                       <dt className="label-mono mb-1.5">סימנים</dt>
@@ -110,12 +111,12 @@ export default function Guide() {
                   </dl>
                   <blockquote className="well mt-5 p-4">
                     <div className="mb-2 flex items-center gap-2" aria-hidden="true">
-                      <Glyph i={a} size={30} strokeWidth={1.15} />
+                      <Glyph i={a} size={30} />
                       <span className="h-px w-6" style={{ background: levelColor(lv) }} />
-                      <Glyph i={b} size={30} strokeWidth={1.15} />
+                      <Glyph i={b} size={30} />
                     </div>
                     <div className="label-mono mb-1.5">דוגמה · {ITEMS[a].l} ו{ITEMS[b].l}</div>
-                    <p className="text-sm leading-relaxed text-foreground/85">{ev.exp}</p>
+                    <p className="text-sm leading-relaxed text-foreground/85"><Rich text={ev.exp} /></p>
                   </blockquote>
                 </div>
               </motion.article>
@@ -128,14 +129,14 @@ export default function Guide() {
         <Heading n="03" kicker="איך נקבעת הדרגה" title="קריאות, ולא תשובה אחת" />
         <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-3">
           {[
-            { t: 'כמה קריאות לכל זוג', b: 'המערכת קוראת כל זוג בכל הצירים: תכונה גלויה, סמל, עיקרון, אנלוגיה, פרדוקס ותגלית. כל ציר נותן קריאה בדרגה אחרת.' },
-            { t: 'הדרגה היא העמוקה המוצדקת', b: 'הניקוד ניתן לפי הקריאה העמוקה ביותר שעומדת בשאלת המבחן של הדרגה שלה. ליד כל קריאה מופיע הנימוק.' },
-            { t: 'אתם מחליטים למה התכוונתם', b: 'אם ראיתם קשר אחר, בחרו אותו או כתבו אותו במילים שלכם. הניקוד לא יורד, והבחירה שלכם קובעת את פרופיל סגנון החשיבה.' },
+            { t: 'כמה קריאות לכל זוג', b: '**המערכת קוראת כל זוג בכל הצירים**: תכונה גלויה, סמל, עיקרון, אנלוגיה, פרדוקס ותגלית. כל ציר נותן קריאה בדרגה אחרת.' },
+            { t: 'הדרגה היא העמוקה המוצדקת', b: 'הניקוד ניתן לפי **הקריאה העמוקה ביותר שעומדת בשאלת המבחן** של הדרגה שלה. ליד כל קריאה מופיע הנימוק.' },
+            { t: 'אתם מחליטים למה התכוונתם', b: 'אם ראיתם קשר אחר, **בחרו אותו או כתבו אותו במילים שלכם**. הניקוד לא יורד, והבחירה שלכם קובעת את פרופיל סגנון החשיבה.' },
           ].map((x, i) => (
             <motion.div key={x.t} {...inView(i * 0.06)} className="border-t border-border pt-4">
               <span className="num-mono text-sm text-muted-foreground" dir="ltr">{String(i + 1).padStart(2, '0')}</span>
               <h3 className="mt-1 text-xl font-light">{x.t}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{x.b}</p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground"><Rich text={x.b} /></p>
             </motion.div>
           ))}
         </div>

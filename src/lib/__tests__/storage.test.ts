@@ -28,7 +28,7 @@ describe('storage', () => {
   });
 
   it('persists settings', () => {
-    saveSettings({ sound: false, haptics: true });
-    expect(loadSettings()).toEqual({ sound: false, haptics: true });
+    saveSettings({ sound: false, haptics: true, labels: false });
+    expect(loadSettings()).toEqual({ sound: false, haptics: true, labels: false });
   });
 });

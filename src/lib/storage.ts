@@ -20,6 +20,8 @@ export interface Stats {
 export interface Settings {
   sound: boolean;
   haptics: boolean;
+  /** Show word names under the drawings on the board. */
+  labels: boolean;
 }
 
 const STATS_KEY = 'kesher:stats:v1';
@@ -27,7 +29,7 @@ const SETTINGS_KEY = 'kesher:settings:v1';
 const HISTORY_LIMIT = 20;
 
 export const DEFAULT_STATS: Stats = { gamesPlayed: 0, bestScore: 0, totalConnections: 0, secrets: [], history: [] };
-export const DEFAULT_SETTINGS: Settings = { sound: true, haptics: true };
+export const DEFAULT_SETTINGS: Settings = { sound: true, haptics: true, labels: false };
 
 function read<T extends object>(key: string, fallback: T): T {
   try {

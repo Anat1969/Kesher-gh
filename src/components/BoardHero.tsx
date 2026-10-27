@@ -82,7 +82,7 @@ export default function BoardHero() {
               <g key={i}>
                 <rect x={p.x - 15} y={p.y - 15} width={30} height={30} fill="hsl(var(--surface-1))"
                   stroke={on ? 'hsl(var(--foreground) / 0.5)' : 'none'} strokeWidth={1} style={{ transition: 'stroke 0.6s' }} />
-                <Glyph i={i} x={p.x - 11} y={p.y - 11} size={22} strokeWidth={on ? 1.5 : 1.2}
+                <Glyph i={i} x={p.x - 12} y={p.y - 12} size={24} tone={on ? 'gold' : 'ink'}
                   style={{ color: on ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground) / 0.8)', transition: 'color 0.6s' }} />
                 <text
                   x={p.x} y={p.y + 30} textAnchor="middle" fontSize="12"

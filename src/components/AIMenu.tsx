@@ -47,8 +47,9 @@ export default function AIMenu({ settings, onSettings }: Props) {
       { label: 'מצב כהה', hint: isDark ? 'פעיל' : 'כבוי', pressed: isDark, onSelect: () => setTheme(isDark ? 'light' : 'dark') },
       { label: 'צלילים', hint: settings.sound ? 'פעילים' : 'כבויים', pressed: settings.sound, onSelect: () => onSettings({ sound: !settings.sound }) },
       { label: 'רטט', hint: settings.haptics ? 'פעיל' : 'כבוי', pressed: settings.haptics, onSelect: () => onSettings({ haptics: !settings.haptics }) },
+      { label: 'שמות על הכרטיסים', hint: settings.labels ? 'מוצגים' : 'רק תמונות', pressed: settings.labels, onSelect: () => onSettings({ labels: !settings.labels }) },
     ];
-  }, [isDark, setTheme, settings.sound, settings.haptics, onSettings]);
+  }, [isDark, setTheme, settings.sound, settings.haptics, settings.labels, onSettings]);
 
   return <ai-menu ref={ref} chat={DEV_SESSION_URL} />;
 }
