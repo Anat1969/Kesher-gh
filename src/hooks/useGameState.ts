@@ -6,10 +6,10 @@ import { analyzePersonality } from '../game/personality';
 import { sounds, vibrate } from '../lib/feedback';
 import { dailyFor, dateKey } from '../game/daily';
 import {
-  loadSettings, loadStats, recordGame, saveSettings, loadDaily, recordDaily, type DailyResult,
+  loadSettings, loadStats, recordGame, mergeHistory, saveSettings, loadDaily, recordDaily, type DailyResult,
   type RecordResult, type Settings, type Stats,
 } from '../lib/storage';
-import { loadPlayer, savePlayer, submitScore, type Player, type Submission } from '../lib/remote';
+import { adoptPlayer, fetchHistory, loadPlayer, parseCode, savePlayer, submitScore, whoami, type Player, type Submission } from '../lib/remote';
 
 export type RemoteStatus =
   | { status: 'idle' }
@@ -131,6 +131,34 @@ export function useGameState() {
     if (!wasJoined && lastSubmission.current) void send(p, lastSubmission.current);
   }, [send]);
 
+  /**
+   * Continues as the player a code belongs to (from another device): checks the code with the
+   * server, adopts the identity and pulls that player's games into the learning graph.
+   * Returns the name and how many games were added, or null when the code is wrong or the network is down.
+   */
+  const restorePlayer = useCallback(async (code: string): Promise<{ name: string; added: number } | null> => {
+    const parsed = parseCode(code);
+    if (!parsed) return null;
+    const name = await whoami(parsed.id, parsed.key);
+    if (!name) return null;
+    const p: Player = { ...parsed, name };
+    adoptPlayer(p);
+    setPlayer(p);
+    const games = await fetchHistory(p);
+    const before = loadStats();
+    let added = 0;
+    if (games) {
+      const records = games.filter(g => g.mode === 'classic').map(g => ({
+        date: g.created_at, total: g.score, connections: g.connections, chains: 0, personality: null,
+        deep: g.deep_ratio ?? undefined,
+      }));
+      const merged = mergeHistory(before, records);
+      added = merged.gamesPlayed - before.gamesPlayed;
+      setStats(merged);
+    }
+    return { name, added };
+  }, []);
+
   const startGame = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'start' }); }, []);
   const startDaily = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'startDaily', daily: dailyFor(dateKey()) }); }, []);
   const resetGame = useCallback(() => dispatch({ type: 'menu' }), []);
@@ -181,5 +209,6 @@ export function useGameState() {
     player,
     remote,
     joinBoard,
+    restorePlayer,
   };
 }

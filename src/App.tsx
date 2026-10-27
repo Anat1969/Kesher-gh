@@ -11,6 +11,7 @@ import Guide from "./pages/Guide.tsx";
 import Secrets from "./pages/Secrets.tsx";
 import DidYouKnow from "./pages/DidYouKnow.tsx";
 import Scores from "./pages/Scores.tsx";
+import Board from "./pages/Board.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const ThemeColorSync = () => {
@@ -39,6 +40,7 @@ const AppRoutes = () => {
         <Route path="/secrets" element={<Page><Secrets /></Page>} />
         <Route path="/did-you-know" element={<Page><DidYouKnow /></Page>} />
         <Route path="/scores" element={<Page><Scores /></Page>} />
+        <Route path="/board" element={<Page><Board /></Page>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<Page><NotFound /></Page>} />
       </Routes>

@@ -105,3 +105,20 @@ export function recordDaily(prev: Stats, result: DailyResult, secrets: string[])
   write(STATS_KEY, stats);
   return { stats, daily: all, newSecrets };
 }
+
+/** Folds games recorded on another device into the local history (deduplicated, newest first). */
+export function mergeHistory(prev: Stats, incoming: GameRecord[]): Stats {
+  const near = (a: GameRecord, b: GameRecord) => a.total === b.total && Math.abs(Date.parse(a.date) - Date.parse(b.date)) < 120_000;
+  const added = incoming.filter(g => !prev.history.some(h => near(h, g)));
+  if (added.length === 0) return prev;
+  const history = [...prev.history, ...added].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)).slice(0, HISTORY_LIMIT);
+  const stats: Stats = {
+    ...prev,
+    gamesPlayed: prev.gamesPlayed + added.length,
+    bestScore: Math.max(prev.bestScore, ...added.map(g => g.total)),
+    totalConnections: prev.totalConnections + added.reduce((s, g) => s + g.connections, 0),
+    history,
+  };
+  write(STATS_KEY, stats);
+  return stats;
+}

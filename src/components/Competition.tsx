@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { fetchBoard, type BoardRow, type Mode } from '../lib/remote';
 import { dateKey } from '../game/daily';
+import { sonReached, sonResults } from '../game/sons';
+import { levelColor, LEVEL_ORDER, type Level } from '../game/gameItems';
 
 /** Nickname field: the only thing besides the score that leaves the device. */
 export function JoinForm({ cta = 'הצטרפות לתחרות', initial = '', onDone }: { cta?: string; initial?: string; onDone?: () => void }) {
@@ -49,7 +51,8 @@ export function CompetitionCard({ mode }: { mode: Mode }) {
               <mark className="hl">מקום {remote.rank}</mark> {board}
             </p>
             <p className="label-mono mt-2">{player.name} · השיא שלכם <span className="num-mono" dir="ltr">{remote.best}</span></p>
-            <Link to="/scores" className="label-mono link-draw mt-3 inline-block">לטבלה ולגרף הלמידה</Link>
+            {mode === 'classic' && <SonLine score={remote.best} />}
+            <Link to="/board" className="label-mono link-draw mt-3 inline-block">לטבלה המלאה</Link>
           </div>
           <div className="display-num text-6xl" dir="ltr">#{remote.rank}</div>
         </div>
@@ -67,15 +70,38 @@ export function CompetitionCard({ mode }: { mode: Mode }) {
   );
 }
 
+const sonThe = (name: string) => (name.startsWith('שאינו') ? `בן ${name}` : name);
+
+/** Which of the four sons a score reaches. */
+export function SonLine({ score }: { score: number }) {
+  const son = sonReached(score);
+  const sons = sonResults();
+  const next = son ? sons[sons.indexOf(son) - 1] : sons[sons.length - 1];
+  return (
+    <p className="mt-2 text-base font-light">
+      {son ? <>ברמת <mark className="hl">{sonThe(son.name)}</mark></> : <>עוד לפני <mark className="hl">{sonThe(sons[sons.length - 1].name)}</mark></>}
+      {next && <span className="text-muted-foreground"> · עוד <span className="num-mono" dir="ltr">{next.best - score}</span> נקודות ל{sonThe(next.name)}</span>}
+    </p>
+  );
+}
+
 type Load = { state: 'loading' } | { state: 'error' } | { state: 'ok'; rows: BoardRow[] };
 
-/** One leaderboard: each player's best, the viewer's row marked. */
+type Row =
+  | { kind: 'player'; id: string; name: string; best: number; games: number }
+  | { kind: 'son'; id: string; name: string; best: number; deepest: Level };
+
+/**
+ * One leaderboard: each player's best, the viewer's row marked. The all-time board always holds
+ * the four sons as standing rows, so every score can be read against a level of thinking.
+ */
 export function Leaderboard({ mode }: { mode: Mode }) {
   const { player, remote } = useGame();
   const [load, setLoad] = useState<Load>({ state: 'loading' });
   const day = dateKey();
   // Refetch after the viewer's own score lands, so their row is current.
   const sent = remote.status === 'done' ? remote.best : 0;
+  const withSons = mode === 'classic';
 
   useEffect(() => {
     let live = true;
@@ -86,39 +112,51 @@ export function Leaderboard({ mode }: { mode: Mode }) {
     return () => { live = false; };
   }, [mode, day, sent, player?.name]);
 
-  if (load.state === 'loading') return <p className="py-8 text-muted-foreground">טוען את הטבלה…</p>;
-  if (load.state === 'error') return <p className="py-8 text-muted-foreground">אין חיבור לטבלה כרגע. נסו שוב בעוד רגע.</p>;
-  if (load.rows.length === 0) {
-    return (
-      <p className="py-8 text-lg font-extralight">
-        {mode === 'daily' ? <>עוד אין תוצאות לאתגר של היום. <mark className="hl">המקום הראשון פנוי</mark>.</> : <>הטבלה ריקה. <mark className="hl">המקום הראשון פנוי</mark>.</>}
-      </p>
-    );
-  }
+  const players: Row[] = load.state === 'ok' ? load.rows.map(r => ({ kind: 'player', id: r.player_id, name: r.name, best: r.best, games: r.games })) : [];
+  const sons: Row[] = withSons
+    ? sonResults().map(s => ({ kind: 'son', id: s.id, name: s.name, best: s.best, deepest: LEVEL_ORDER.filter(l => s.sees.includes(l)).pop()! }))
+    : [];
+  const rows = [...players, ...sons].sort((a, b) => b.best - a.best || (a.kind === 'son' ? 1 : -1));
+  const mine = players.some(r => r.id === player?.id);
 
-  const mine = load.rows.some(r => r.player_id === player?.id);
   return (
     <>
-      <ol className="grid grid-cols-[minmax(0,1fr)]" aria-label={mode === 'daily' ? 'טבלת האתגר היומי' : 'טבלה כללית'}>
-        {load.rows.map(r => {
-          const me = r.player_id === player?.id;
-          return (
-            <li
-              key={r.player_id}
-              className={`grid grid-cols-[2.5rem_minmax(0,1fr)_auto_3.5rem] items-baseline gap-3 border-b border-border px-2 py-3 ${me ? 'bg-surface-3' : ''}`}
-            >
-              <span className={`num-mono text-sm ${r.rank <= 3 ? 'text-foreground' : 'text-muted-foreground'}`} dir="ltr" style={{ textAlign: 'right' }}>{String(r.rank).padStart(2, '0')}</span>
-              <span className={`truncate text-lg ${r.rank === 1 ? 'font-normal' : 'font-light'}`}>
-                {me ? <mark className="hl">{r.name}</mark> : r.name}
-                {me && <span className="label-mono mr-2">אתם</span>}
-              </span>
-              <span className="num-mono text-lg" dir="ltr">{r.best}</span>
-              <span className="label-mono text-left" title="משחקים">{r.games} מש׳</span>
-            </li>
-          );
-        })}
-      </ol>
-      {player && !mine && <p className="label-mono mt-3">הכינוי שלכם לא בעשרים הראשונים, או שעוד לא שיחקתם כאן.</p>}
+      {load.state === 'loading' && <p className="py-4 text-muted-foreground">טוען את הטבלה…</p>}
+      {load.state === 'error' && <p className="py-4 text-muted-foreground">אין חיבור לטבלה כרגע. {withSons ? 'ארבעת הבנים מוצגים בינתיים.' : 'נסו שוב בעוד רגע.'}</p>}
+      {load.state === 'ok' && players.length === 0 && (
+        <p className="py-4 text-lg font-extralight">
+          {mode === 'daily' ? <>עוד אין תוצאות לאתגר של היום. <mark className="hl">המקום הראשון פנוי</mark>.</> : <>עוד אין משתתפים. <mark className="hl">המקום הראשון פנוי</mark>.</>}
+        </p>
+      )}
+      {rows.length > 0 && (
+        <ol className="grid grid-cols-[minmax(0,1fr)]" aria-label={mode === 'daily' ? 'טבלת האתגר היומי' : 'טבלה כללית'}>
+          {rows.map((r, i) => {
+            const me = r.kind === 'player' && r.id === player?.id;
+            const son = r.kind === 'son';
+            return (
+              <li
+                key={r.id}
+                className={`grid grid-cols-[2.5rem_minmax(0,1fr)_auto_3.5rem] items-baseline gap-3 border-b px-2 py-3 ${me ? 'bg-surface-3' : ''} ${son ? 'border-dashed border-foreground/30' : 'border-border'}`}
+              >
+                <span className={`num-mono text-sm ${i < 3 ? 'text-foreground' : 'text-muted-foreground'}`} dir="ltr" style={{ textAlign: 'right' }}>{String(i + 1).padStart(2, '0')}</span>
+                <span className={`truncate text-lg ${i === 0 ? 'font-normal' : 'font-light'}`}>
+                  {son ? (
+                    <>
+                      <span className="ml-2 inline-block h-2 w-2 rounded-full align-middle" style={{ background: levelColor(r.deepest) }} aria-hidden="true" />
+                      <span style={{ color: levelColor(r.deepest) }}>{r.name}</span>
+                      <span className="label-mono mr-2">דמות</span>
+                    </>
+                  ) : me ? <mark className="hl">{r.name}</mark> : r.name}
+                  {me && <span className="label-mono mr-2">אתם</span>}
+                </span>
+                <span className="num-mono text-lg" dir="ltr">{r.best}</span>
+                <span className="label-mono text-left">{r.kind === 'player' ? `${r.games} מש׳` : ''}</span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+      {player && load.state === 'ok' && !mine && <p className="label-mono mt-3">הכינוי שלכם לא בעשרים הראשונים, או שעוד לא שיחקתם כאן.</p>}
     </>
   );
 }

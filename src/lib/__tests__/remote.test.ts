@@ -54,3 +54,29 @@ describe('learning maths', () => {
     expect(trendLine([80, 81, 80, 82])).toMatch(/יציב/);
   });
 });
+
+describe('player code', () => {
+  it('round-trips id and key, also from a link', async () => {
+    const { playerCode, parseCode } = await import('../remote');
+    const p = { id: '0f1e2d3c-4b5a-4968-8776-655443322110', key: 'ab'.repeat(24), name: 'א' };
+    const code = playerCode(p);
+    expect(code.length).toBeLessThan(60);
+    expect(parseCode(code)).toEqual({ id: p.id, key: p.key });
+    expect(parseCode(`https://kesher-gh.vercel.app/scores#player=${code}`)).toEqual({ id: p.id, key: p.key });
+    expect(parseCode('hello')).toBeNull();
+  });
+});
+
+describe('merge history', () => {
+  it('adds only games not already on this device', async () => {
+    const { mergeHistory, DEFAULT_STATS } = await import('../storage');
+    const local = { ...DEFAULT_STATS, gamesPlayed: 1, bestScore: 80, history: [{ date: '2026-10-27T10:00:00.000Z', total: 80, connections: 5, chains: 0, personality: null }] };
+    const next = mergeHistory(local, [
+      { date: '2026-10-27T10:00:01.200Z', total: 80, connections: 5, chains: 0, personality: null },
+      { date: '2026-10-26T09:00:00.000Z', total: 140, connections: 9, chains: 0, personality: null },
+    ]);
+    expect(next.gamesPlayed).toBe(2);
+    expect(next.bestScore).toBe(140);
+    expect(next.history.map(h => h.total)).toEqual([80, 140]);
+  });
+});
