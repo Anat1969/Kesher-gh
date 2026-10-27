@@ -9,6 +9,15 @@ import {
   loadSettings, loadStats, recordGame, saveSettings, loadDaily, recordDaily, type DailyResult,
   type RecordResult, type Settings, type Stats,
 } from '../lib/storage';
+import { loadPlayer, savePlayer, submitScore, type Player, type Submission } from '../lib/remote';
+
+export type RemoteStatus =
+  | { status: 'idle' }
+  | { status: 'sending' }
+  | { status: 'done'; best: number; rank: number }
+  | { status: 'error' };
+
+const deepShare = (lvs: string[]) => (lvs.length ? lvs.filter(l => l === 'd' || l === 's').length / lvs.length : 0);
 
 export type { GameState } from '../game/engine';
 
@@ -18,6 +27,16 @@ export function useGameState() {
   const [stats, setStats] = useState<Stats>(loadStats);
   const [lastRecord, setLastRecord] = useState<RecordResult | null>(null);
   const [dailyResults, setDailyResults] = useState<Record<string, DailyResult>>(loadDaily);
+  const [player, setPlayer] = useState<Player | null>(loadPlayer);
+  const [remote, setRemote] = useState<RemoteStatus>({ status: 'idle' });
+  /** The last finished game, kept so a player who joins the board right after it can still send it. */
+  const lastSubmission = useRef<Submission | null>(null);
+
+  const send = useCallback(async (p: Player, sub: Submission) => {
+    setRemote({ status: 'sending' });
+    const res = await submitScore(p, sub);
+    setRemote(res ? { status: 'done', best: res.best, rank: res.rank } : { status: 'error' });
+  }, []);
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -65,7 +84,8 @@ export function useGameState() {
     if (state.screen === 'game') recordedRef.current = false;
     if (state.screen !== 'results' || recordedRef.current) return;
     recordedRef.current = true;
-    if (state.directConns.length === 0) return; // ended without playing — nothing to record
+    if (state.directConns.length === 0) { lastSubmission.current = null; return; } // ended without playing
+    const deep = deepShare(state.directConns.map(c => c.ev.lv));
     const personality = state.directConns.length ? analyzePersonality(state.directConns, state.chainConns) : null;
     const secrets = [...state.directConns, ...state.chainConns]
       .filter(c => isHandCraftedSecret(c.a, c.b))
@@ -80,6 +100,9 @@ export function useGameState() {
       setDailyResults(rec.daily);
       setLastRecord({ stats: rec.stats, isNewBest: false, newSecrets: rec.newSecrets });
       feedback(sounds.finish, [30, 50, 30, 50, 80]);
+      lastSubmission.current = { mode: 'daily', day: d.key, score: state.score, connections: state.directConns.length, deep };
+      const p = loadPlayer();
+      if (p) void send(p, lastSubmission.current);
       return;
     }
     const result = recordGame(loadStats(), {
@@ -88,15 +111,28 @@ export function useGameState() {
       connections: state.directConns.length,
       chains: state.chainConns.length,
       personality: personality ? `${personality.emoji} ${personality.type}` : null,
+      deep,
       secrets,
     });
     setStats(result.stats);
     setLastRecord(result);
     feedback(sounds.finish, [30, 50, 30, 50, 80]);
-  }, [state, feedback]);
+    lastSubmission.current = { mode: 'classic', day: null, score: sumScore(state), connections: state.directConns.length, deep };
+    const p = loadPlayer();
+    if (p) void send(p, lastSubmission.current);
+  }, [state, feedback, send]);
 
-  const startGame = useCallback(() => { setLastRecord(null); dispatch({ type: 'start' }); }, []);
-  const startDaily = useCallback(() => { setLastRecord(null); dispatch({ type: 'startDaily', daily: dailyFor(dateKey()) }); }, []);
+  /** Joins the shared board (or renames), and sends the game just finished if it was not sent yet. */
+  const joinBoard = useCallback((name: string) => {
+    const wasJoined = !!loadPlayer();
+    const p = savePlayer(name);
+    if (!p) return;
+    setPlayer(p);
+    if (!wasJoined && lastSubmission.current) void send(p, lastSubmission.current);
+  }, [send]);
+
+  const startGame = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'start' }); }, []);
+  const startDaily = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'startDaily', daily: dailyFor(dateKey()) }); }, []);
   const resetGame = useCallback(() => dispatch({ type: 'menu' }), []);
   const pause = useCallback(() => dispatch({ type: 'pause' }), []);
   const resume = useCallback(() => dispatch({ type: 'resume' }), []);
@@ -142,5 +178,8 @@ export function useGameState() {
     annotate,
     pick,
     updateSettings,
+    player,
+    remote,
+    joinBoard,
   };
 }

@@ -8,6 +8,7 @@ const NAV = [
   { to: '/guide', label: 'מדריך', short: 'מדריך', end: false },
   { to: '/secrets', label: 'אוסף הסודות', short: 'סודות', end: false },
   { to: '/did-you-know', label: 'הידעת', short: 'הידעת', end: false },
+  { to: '/scores', label: 'תוצאות', short: 'תוצאות', end: false },
 ] as const;
 
 /** Fixed top bar on every page: app name (home), content navigation, and the A&I button. */

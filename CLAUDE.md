@@ -44,6 +44,13 @@
 - Daily challenge (2026-10-27): same start, target and 5-link length for everyone each day
   (`src/game/daily.ts`, seeded by date), no clock, last link must land on the target, score shown
   against the day's computed maximum and its best chain; results kept per day in localStorage, with a streak and a 14-day journal strip on the home card.
+- Results for every player (2026-10-27): a personal learning graph (`src/components/LearningChart.tsx`,
+  dots per game + 5-game rolling mean + depth strip, trend headline from `src/lib/learning.ts`) on the
+  results screen and on `/scores` ("תוצאות" in the top bar), and a shared leaderboard of each player's best
+  (all-time classic, and today's daily). Backend: Supabase hub cultura-GH, tables `kesher_players` /
+  `kesher_scores` closed to the public key; the client calls only the RPCs `kesher_submit`,
+  `kesher_leaderboard`, `kesher_history` (`src/lib/remote.ts`, fails soft offline). Joining is opt-in with a
+  nickname only; identity is a random id + private key in localStorage.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## What "upgrade" means here
