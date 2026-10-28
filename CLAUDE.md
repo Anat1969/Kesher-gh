@@ -1,5 +1,20 @@
 # CLAUDE.md — Working agreement for this project
 
+## כללי עבודה עם Claude, בכל שיחה (הנחיית הבעלים, 2026-10-28)
+
+1. **כל התקשורת בעברית**: תשובות, עדכוני ביניים, שאלות, סיכומים ותיאורי PR. רק קוד, שמות קבצים
+   ופקודות נשארים באנגלית.
+2. **לפני פעולה: הנדסת הבקשה.** לזקק את הבקשה למטרה במשפט אחד, לחלץ ממנה כל דרישה (גם את
+   המשתמעות), לזהות מה עלול להיכשל, ולכתוב תוכנית קצרה ממוספרת: "מה אני הולך לעשות", הנחות,
+   ומה רלוונטי מהניסיון הקודם. רק אחר כך לבצע.
+3. **תוך כדי עבודה**: שורת עדכון קצרה בעברית בכל שלב משמעותי (מה עכשיו ולמה).
+4. **הבעלים חייבת לראות את השינוי**: כל פיצ'ר נבדק כפי שהיא תראה אותו, בטלפון (גם באפליקציה
+   המותקנת באייפון) ובמחשב. לא מסתירים פיצ'ר כשהדפדפן לא תומך: נותנים דרך חלופית. בסוף בודקים
+   שהגרסה החיה באמת מכילה את השינוי (הגרסה מוצגת בתפריט A&I, "גרסה").
+5. **בסיום, תמיד שלושה חלקים**: "מה עשיתי" (מה נבדק ועבד, מה לא נבדק ולמה), "מה לא נעשה",
+   "מה אפשר לייעל" (תובנה לפעם הבאה וצעד הבא).
+6. כל תיקון של הבעלים נכנס מיד לקובץ הזה ומיושם מאותו רגע.
+
 ## Workflow (standing instruction from the owner)
 
 - The owner builds the base version of each project in **Lovable**, which syncs it to GitHub.
@@ -63,7 +78,10 @@
   (`src/components/VoiceNote.tsx`, full in the reading panel, compact in the phone strip), is saved as the
   connection's note and compared with the readings at once (`src/lib/compare.ts`: shared content words,
   shown to the player, labelled an estimate). The results screen opens with "מה אמרתם, מול מה שפירשתי".
-  Typing is always the fallback. The clock keeps running while recording.
+  Typing is always the fallback. The clock keeps running while recording. The "הסבירו בקול" button is
+  always shown (2026-10-28, "לא רואה שינוי"): where the browser has no speech recognition (e.g. the
+  installed iPhone app) it opens a text field for the keyboard's own dictation microphone. The home page,
+  the empty reading panel and the phone strip announce the feature.
 - Score in play (2026-10-28): each connection's points rise from the card in its level's colour, larger
   the deeper the level, with chain bonus beneath; the HUD score flashes the level colour with "+N".
 - Navigation (2026-10-28): the current page is always visibly marked (weight, 2px bar, grey fill on
@@ -114,4 +132,4 @@ Relevant skills to use: `engineering:code-review`, `engineering:testing-strategy
 
 ## Communication
 
-- The owner writes in Hebrew — reply in Hebrew.
+- The owner writes in Hebrew. Every reply, update and summary is in Hebrew (see the rules at the top).

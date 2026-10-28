@@ -56,6 +56,10 @@ export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: 
             </button>
             <Link to="/guide" className="btn btn-ghost h-12 px-6 text-base">איך משחקים</Link>
           </motion.div>
+          <motion.p {...fade(0.28)} className="mt-5 max-w-[460px] border-r-2 border-foreground/70 pr-3 text-[0.95rem] font-light">
+            <span className="label-mono">חדש · </span>
+            אחרי כל קשר, <mark className="hl">הסבירו אותו בקול</mark>. התמלול מופיע ליד הקריאה שלי, ובסוף המשחק נראה איפה חשבתם אחרת.
+          </motion.p>
 
           <motion.dl {...fade(0.32)} className="mt-12 grid max-w-[460px] grid-cols-3 border-t border-border pt-4">
             {(played
