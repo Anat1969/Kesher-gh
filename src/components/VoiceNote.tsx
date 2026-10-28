@@ -87,10 +87,13 @@ export default function VoiceNote({ a, b, note, meant, onNote, onMeant, compact 
     }
   };
 
-  const recordButton = speech.supported && (
+  // Where the browser has no speech recognition (e.g. some installed iPhone apps), the same button
+  // opens a text field: the phone keyboard's own microphone dictates Hebrew into it.
+  const dictateHint = 'הקישו על סמל המיקרופון במקלדת ודברו, או כתבו';
+  const recordButton = (
     <button
       type="button"
-      onClick={toggle}
+      onClick={speech.supported && speech.error !== 'denied' ? toggle : () => setTyping(true)}
       aria-pressed={speech.listening}
       className={`btn ${compact ? 'h-9 px-3.5 text-sm' : 'h-12 px-5 text-[0.95rem]'} ${speech.listening ? 'btn-primary' : 'btn-ghost'}`}
     >
@@ -108,7 +111,27 @@ export default function VoiceNote({ a, b, note, meant, onNote, onMeant, compact 
     </p>
   );
 
+  const typingForm = (rows: number) => (
+    <form onSubmit={e => { e.preventDefault(); onNote(draft.trim()); setTyping(false); }} className="flex flex-col gap-2">
+      <textarea
+        aria-label="במילים שלכם, מה ראיתם?"
+        placeholder={dictateHint}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        rows={rows}
+        maxLength={400}
+        autoFocus
+        className="w-full resize-none rounded-[2px] border border-border bg-surface-1 px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+      />
+      <div className="flex gap-2">
+        <button type="submit" className="btn btn-primary h-9 px-4 text-sm">שמירה</button>
+        <button type="button" onClick={() => setTyping(false)} className="btn btn-text h-9 px-2 text-sm">ביטול</button>
+      </div>
+    </form>
+  );
+
   if (compact) {
+    if (typing) return <div className="mt-2">{typingForm(2)}</div>;
     return (
       <div>
         <div className="mt-1 min-h-[2.6em] text-[0.84rem] leading-relaxed" aria-live="polite">
@@ -145,26 +168,12 @@ export default function VoiceNote({ a, b, note, meant, onNote, onMeant, compact 
           {speech.text || <span className="text-muted-foreground">מקשיב… הסבירו מה מחבר בין {ITEMS[a].l} ל{ITEMS[b].l}</span>}
         </div>
       ) : typing ? (
-        <form onSubmit={e => { e.preventDefault(); onNote(draft.trim()); setTyping(false); }} className="flex flex-col gap-2">
-          <textarea
-            aria-label="במילים שלכם, מה ראיתם?"
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            rows={3}
-            maxLength={400}
-            autoFocus
-            className="w-full resize-none rounded-[2px] border border-border bg-surface-1 px-3 py-2 text-sm focus:border-foreground focus:outline-none"
-          />
-          <div className="flex gap-2">
-            <button type="submit" className="btn btn-primary h-9 px-4 text-sm">שמירה</button>
-            <button type="button" onClick={() => setTyping(false)} className="btn btn-text h-9 px-2 text-sm">ביטול</button>
-          </div>
-        </form>
+        typingForm(3)
       ) : note ? (
         <p className="text-[0.95rem] leading-relaxed">"{note}"</p>
       ) : (
         <p className="text-sm text-muted-foreground">
-          {speech.supported ? <>אמרו <mark className="hl">במשפט אחד</mark> מה ראיתם. התמלול מופיע כאן, ליד הקריאה שלי.</> : 'כתבו במשפט אחד מה ראיתם, ליד הקריאה שלי.'}
+          <>אמרו <mark className="hl">במשפט אחד</mark> מה ראיתם. התמלול מופיע כאן, ליד הקריאה שלי, ואני משווה ביניהם.</>
         </p>
       )}
 

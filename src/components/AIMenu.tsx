@@ -2,6 +2,13 @@ import { useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import type { Settings } from '../lib/storage';
 
+const BUILD = (() => {
+  try {
+    const d = new Date(typeof __BUILD__ === 'string' ? __BUILD__ : '');
+    return isNaN(d.getTime()) ? '' : d.toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch { return ''; }
+})();
+
 export const DEV_SESSION_URL = 'https://claude.ai/code/session_01AWJaM53EKZELq66AcxaJZT';
 
 interface MenuItem {
@@ -47,6 +54,7 @@ export default function AIMenu({ settings, onSettings }: Props) {
       { label: 'מצב כהה', hint: isDark ? 'פעיל' : 'כבוי', pressed: isDark, onSelect: () => setTheme(isDark ? 'light' : 'dark') },
       { label: 'צלילים', hint: settings.sound ? 'פעילים' : 'כבויים', pressed: settings.sound, onSelect: () => onSettings({ sound: !settings.sound }) },
       { label: 'רטט', hint: settings.haptics ? 'פעיל' : 'כבוי', pressed: settings.haptics, onSelect: () => onSettings({ haptics: !settings.haptics }) },
+      ...(BUILD ? [{ label: 'גרסה', hint: `${BUILD} · רענון`, onSelect: () => window.location.reload() }] : []),
       { label: 'שמות על הכרטיסים', hint: settings.labels ? 'מוצגים' : 'רק תמונות', pressed: settings.labels, onSelect: () => onSettings({ labels: !settings.labels }) },
     ];
   }, [isDark, setTheme, settings.sound, settings.haptics, settings.labels, onSettings]);

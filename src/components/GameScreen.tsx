@@ -438,7 +438,8 @@ export default function GameScreen({
             </motion.div>
           ) : (
             <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-4 py-4 text-center text-sm text-muted-foreground">
-              בחרו <span className="text-foreground">שתי מילים</span> כדי לגלות את הקשר ביניהן
+              בחרו <span className="text-foreground">שתי מילים</span> כדי לגלות את הקשר ביניהן.
+              <span className="mt-1 block text-[0.78rem]">אחרי כל קשר: <mark className="hl">הסבירו אותו בקול</mark>, והשוו לקריאה שלי.</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -480,7 +481,8 @@ export default function GameScreen({
                 <p className="label-mono">קריאה</p>
                 <h2 className="mt-2 text-[2rem] font-thin leading-tight">כאן יופיע הקשר</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                  בחרו שתי מילים. לכל חיבור תופיע קריאה מלאה: הדרגה, ההסבר, למה זו הדרגה, וקריאות נוספות אם התכוונתם למשהו אחר.
+                  בחרו שתי מילים. לכל חיבור תופיע קריאה מלאה: הדרגה, ההסבר, למה זו הדרגה, וקריאות נוספות.
+                  <span className="mt-3 block text-foreground">חדש: <mark className="hl">הסבירו כל קשר בקול</mark>. התמלול יופיע כאן, ליד הקריאה שלי, ואראה אם חשבנו אותו דבר.</span>
                 </p>
               </motion.div>
             )}
