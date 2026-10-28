@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import AIMenu from './AIMenu';
+import Logo from './Logo';
 
 const NAV = [
   { to: '/', label: 'משחק', short: 'משחק', end: true },
@@ -27,35 +28,36 @@ export default function TopBar() {
     >
       <div className="mx-auto max-w-[1080px] px-4">
         <div className="flex h-14 items-center justify-between gap-3">
-          <Link to="/" className="group flex items-baseline gap-2.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="קשר, דף הבית">
+          <Link to="/" className="group flex items-center gap-2.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="קשר, דף הבית">
+            <Logo size={30} />
             <span className="text-[1.6rem] font-thin leading-none tracking-wide text-foreground">קֶשֶׁר</span>
             <span className="label-mono hidden min-[380px]:inline transition-colors group-hover:text-foreground">KESHER</span>
             {inGame && <span className="label-mono hidden sm:inline">· משחק פעיל</span>}
           </Link>
 
           <nav aria-label="ניווט ראשי" className="hidden md:flex items-center gap-1">
-            {NAV.map(n => <NavItem key={n.to} {...n} />)}
+            {NAV.map(n => <NavItem key={n.to} {...n} group="desk" />)}
           </nav>
 
           <AIMenu settings={settings} onSettings={updateSettings} />
         </div>
 
         <nav aria-label="ניווט ראשי" className="md:hidden -mt-1 flex h-10 items-stretch gap-0.5 -mx-2">
-          {NAV.map(n => <NavItem key={n.to} {...n} />)}
+          {NAV.map(n => <NavItem key={n.to} {...n} group="mobile" />)}
         </nav>
       </div>
     </header>
   );
 }
 
-function NavItem({ to, label, short, end }: { to: string; label: string; short: string; end: boolean }) {
+function NavItem({ to, label, short, end, group }: { to: string; label: string; short: string; end: boolean; group: string }) {
   return (
     <NavLink
       to={to}
       end={end}
       className={({ isActive }) =>
         `relative flex flex-1 md:flex-none items-center justify-center whitespace-nowrap px-1 text-[0.8125rem] md:px-3 md:text-sm transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9 ${
-          isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+          isActive ? 'font-medium text-foreground md:bg-surface-3' : 'text-muted-foreground hover:text-foreground'
         }`
       }
     >
@@ -65,8 +67,8 @@ function NavItem({ to, label, short, end }: { to: string; label: string; short: 
           <span className="hidden md:inline">{label}</span>
           {isActive && (
             <motion.span
-              layoutId="nav-underline"
-              className="absolute inset-x-2 bottom-0 h-px bg-foreground"
+              layoutId={`nav-underline-${group}`}
+              className="absolute inset-x-1 bottom-0 h-[2px] bg-foreground md:inset-x-2"
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             />
           )}

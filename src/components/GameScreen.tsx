@@ -9,8 +9,8 @@ import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { isHandCraftedSecret, pairKey, readingsFor } from '../game/evaluator';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ReadingPanel from './ReadingPanel';
+import VoiceNote from './VoiceNote';
 import Glyph from './Glyph';
-import Rich from './Rich';
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import AnimatedNumber from './AnimatedNumber';
@@ -47,6 +47,9 @@ export default function GameScreen({
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [chainToast, setChainToast] = useState<{ count: number; id: number } | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const wellRef = useRef<HTMLDivElement>(null);
+  const [floats, setFloats] = useState<ScoreFloatItem[]>([]);
+  const [flash, setFlash] = useState<{ lv: Level; gain: number; id: number } | null>(null);
 
   const { lastEval } = state;
   const daily = state.mode === 'daily' ? state.daily : null;
@@ -60,6 +63,25 @@ export default function GameScreen({
     setChainToast({ count: state.pendingChains.length, id: lastEval.id });
     const t = setTimeout(() => setChainToast(null), 2600);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per connection
+  }, [lastEval?.id]);
+
+  // The points of each new connection rise from the card, in its level's colour and size,
+  // and the score in the instrument panel flashes the same colour.
+  useEffect(() => {
+    if (!lastEval) return;
+    const card = cardRefs.current[lastEval.b];
+    const well = wellRef.current;
+    const bonus = state.pendingChains.reduce((t, c) => t + (c.bonus ?? 0), 0);
+    setFlash({ lv: lastEval.ev.lv, gain: lastEval.ev.sc + bonus, id: lastEval.id });
+    const tf = setTimeout(() => setFlash(f => (f?.id === lastEval.id ? null : f)), 1400);
+    if (!card || !well) return () => clearTimeout(tf);
+    const c = card.getBoundingClientRect();
+    const w = well.getBoundingClientRect();
+    const item: ScoreFloatItem = { id: lastEval.id, x: c.left - w.left + c.width / 2, y: c.top - w.top + c.height * 0.35, sc: lastEval.ev.sc, lv: lastEval.ev.lv, bonus };
+    setFloats(f => [...f.slice(-3), item]);
+    const t = setTimeout(() => setFloats(f => f.filter(x => x.id !== item.id)), 1900);
+    return () => { clearTimeout(t); clearTimeout(tf); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per connection
   }, [lastEval?.id]);
 
@@ -123,8 +145,8 @@ export default function GameScreen({
                 <Glyph i={daily.target} size={22} />
               </span>
             </Figure>
-            <Figure label="ניקוד" divider>
-              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem] [@media(max-height:760px)]:text-[1.8rem]" />
+            <Figure label="ניקוד" divider gain={flash}>
+              <ScoreFigure value={totalScore} flash={flash} />
             </Figure>
             <Figure label="קשרים" divider>
               <span className="num-mono text-[1.35rem] font-light" dir="ltr">{state.directConns.length}/{daily.links}</span>
@@ -135,8 +157,8 @@ export default function GameScreen({
             <Figure label={state.paused ? 'עצור' : 'זמן'} role="timer" ariaLabel={`זמן שנותר ${formatTime(state.timeLeft)}`}>
               <span className={`num-mono text-[1.35rem] font-light ${isUrgent && !state.paused ? 'animate-blink' : ''} ${state.paused ? 'text-muted-foreground' : ''}`} dir="ltr">{formatTime(state.timeLeft)}</span>
             </Figure>
-            <Figure label="ניקוד" divider>
-              <AnimatedNumber value={totalScore} className="display-num text-[2.4rem] [@media(max-height:760px)]:text-[1.8rem]" />
+            <Figure label="ניקוד" divider gain={flash}>
+              <ScoreFigure value={totalScore} flash={flash} />
             </Figure>
             <Figure label="קשרים" divider>
               <span className="num-mono text-[1.35rem] font-light" dir="ltr">{pad2(state.directConns.length)}</span>
@@ -220,6 +242,7 @@ export default function GameScreen({
       {/* Board */}
       <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center" style={{ containerType: 'size' }}>
         <div
+          ref={wellRef}
           className="well relative p-[clamp(5px,1.6vw,12px)]"
           style={{ width: 'min(600px, 100cqw, calc(100cqh - 2.25rem))' }}
         >
@@ -309,6 +332,12 @@ export default function GameScreen({
             })}
           </div>
 
+          <div className="pointer-events-none absolute inset-0 z-[30]" aria-hidden="true">
+            <AnimatePresence>
+              {floats.map(f => <ScoreFloat key={f.id} f={f} />)}
+            </AnimatePresence>
+          </div>
+
           <AnimatePresence>
             {state.paused && (
               <motion.div
@@ -392,10 +421,20 @@ export default function GameScreen({
                   </span>
                 )}
               </div>
-              <p className="mt-1 line-clamp-2 text-[0.84rem] leading-relaxed text-foreground/85 [@media(max-height:760px)]:line-clamp-1"><Rich text={lastEval.ev.insight ?? lastEval.ev.exp} /></p>
-              <button type="button" onClick={() => setSheetOpen(true)} className="label-mono link-draw mt-1.5">
-                קריאה מלאה{alternatives > 0 ? ` · עוד ${alternatives} קריאות` : ''}
-              </button>
+              {lastConn && (
+                <VoiceNote
+                  compact
+                  a={lastEval.a}
+                  b={lastEval.b}
+                  note={lastConn.note}
+                  meant={lastConn.meant}
+                  onNote={note => onAnnotate(lastIndex, { note })}
+                  onMeant={(meant, meantLv) => onAnnotate(lastIndex, { meant, meantLv })}
+                  insight={lastEval.ev.insight ?? lastEval.ev.exp}
+                  onOpen={() => setSheetOpen(true)}
+                  more={alternatives}
+                />
+              )}
             </motion.div>
           ) : (
             <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-4 py-4 text-center text-sm text-muted-foreground">
@@ -476,10 +515,28 @@ export default function GameScreen({
   );
 }
 
-function Figure({ label, children, divider, role, ariaLabel }: { label: string; children: React.ReactNode; divider?: boolean; role?: string; ariaLabel?: string }) {
+function Figure({ label, children, divider, role, ariaLabel, gain }: { label: string; children: React.ReactNode; divider?: boolean; role?: string; ariaLabel?: string; gain?: { lv: Level; gain: number; id: number } | null }) {
   return (
     <div role={role} aria-label={ariaLabel} className={`flex min-w-0 flex-col justify-between gap-1.5 px-3 py-2.5 sm:px-4 [@media(max-height:760px)]:gap-0.5 [@media(max-height:760px)]:py-1.5 ${divider ? 'border-r border-border' : ''}`}>
-      <span className="label-mono">{label}</span>
+      <span className="label-mono flex items-baseline gap-2">
+        {label}
+        <AnimatePresence>
+          {gain && (
+            <motion.span
+              key={gain.id}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: EASE }}
+              className="num-mono"
+              style={{ color: levelColor(gain.lv) }}
+              dir="ltr"
+            >
+              +{gain.gain}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </span>
       {children}
     </div>
   );
@@ -510,5 +567,53 @@ function MilestoneTrack({ total, current, next }: { total: number; current: Mile
         <span className="label-mono">{next ? <>הבא · {next.lbl} · <span dir="ltr">{next.pts}</span></> : 'מאסטר'}</span>
       </div>
     </div>
+  );
+}
+
+interface ScoreFloatItem { id: number; x: number; y: number; sc: number; lv: Level; bonus: number }
+
+const FLOAT_SIZE: Record<Level, string> = { p: '1.35rem', r: '1.8rem', d: '2.4rem', s: '3.1rem' };
+
+/** Points rising from the card just connected: bigger and richer the deeper the level. */
+function ScoreFloat({ f }: { f: ScoreFloatItem }) {
+  return (
+    <motion.div
+      className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+      style={{ left: f.x, top: f.y }}
+      initial={{ opacity: 0, y: 8, scale: 0.85 }}
+      animate={{ opacity: [0, 1, 1, 0], y: -64, scale: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 1.7, times: [0, 0.12, 0.7, 1], ease: EASE }}
+    >
+      <span
+        className="num-mono rounded-[2px] border bg-surface-1 px-2 font-light leading-tight shadow-md"
+        style={{ color: levelColor(f.lv), borderColor: levelColor(f.lv, 0.5), fontSize: FLOAT_SIZE[f.lv] }}
+        dir="ltr"
+      >
+        +{f.sc}
+      </span>
+      <span className="mt-1 rounded-[2px] bg-surface-1/90 px-1 text-[0.72rem]" style={{ color: levelColor(f.lv) }}>{LEVEL_NAMES[f.lv]}</span>
+      {f.bonus > 0 && (
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="num-mono mt-1 rounded-[2px] bg-surface-1/90 px-1 text-[0.85rem]"
+          style={{ color: 'hsl(var(--chain))' }}
+          dir="ltr"
+        >
+          +{f.bonus} שרשרת
+        </motion.span>
+      )}
+    </motion.div>
+  );
+}
+
+/** The running score, flashing the colour of the level just earned. */
+function ScoreFigure({ value, flash }: { value: number; flash: { lv: Level } | null }) {
+  return (
+    <span className="transition-colors duration-1000" style={{ color: flash ? levelColor(flash.lv) : 'hsl(var(--foreground))' }}>
+      <AnimatedNumber value={value} className="display-num text-[2.4rem] [@media(max-height:760px)]:text-[1.8rem]" />
+    </span>
   );
 }
