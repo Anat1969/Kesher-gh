@@ -15,6 +15,8 @@ import Rich from './Rich';
 import { markLead } from '../lib/marker';
 import { CompetitionCard } from './Competition';
 import LearningChart from './LearningChart';
+import { VerdictLine } from './VoiceNote';
+import { compareMeaning } from '../lib/compare';
 import { trendLine } from '../lib/learning';
 
 interface ResultsScreenProps {
@@ -169,6 +171,12 @@ export default function ResultsScreen({
             </div>
             <div className="display-num text-5xl" dir="ltr">{stats.secrets.length}<span className="text-muted-foreground">/{SECRET_KEYS.length}</span></div>
           </motion.section>
+        )}
+
+        {directConns.some(c => c.note) && (
+          <Section n={next()} kicker="ההסברים שלכם" title="מה אמרתם, מול מה שפירשתי">
+            <SaidVsRead directConns={directConns} />
+          </Section>
         )}
 
         <Section n={next()} kicker="פרופיל עומק" title="איך התפלגו הקשרים שלך">
@@ -346,5 +354,51 @@ function DailyHeadline({ daily, path, directConns, onPlayAgain, onMenu }: {
         <button onClick={onMenu} className="btn btn-text h-12 px-3 text-sm">לדף הבית</button>
       </div>
     </section>
+  );
+}
+
+/** Each explained connection: the player's words next to the game's reading, and whether they differ. */
+function SaidVsRead({ directConns }: { directConns: Connection[] }) {
+  const rows = directConns
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => c.note)
+    .map(({ c, i }) => {
+      const readings = readingsFor(c.a, c.b);
+      return { c, i, primary: readings[0], v: compareMeaning(c.note!, readings, [ITEMS[c.a].l, ITEMS[c.b].l]) };
+    });
+  const differ = rows.filter(r => r.v.kind !== 'same').length;
+  return (
+    <>
+      <p className="-mt-3 mb-6 text-lg font-light">
+        {differ === 0
+          ? rows.length === 1 ? <>ההסבר שלכם <mark className="hl">באותו כיוון</mark> כמו הקריאה שלי.</> : <>בכל {rows.length} ההסברים <mark className="hl">חשבנו באותו כיוון</mark>.</>
+          : rows.length === 1 ? <>ההסבר שלכם <mark className="hl">שונה מהקריאה שלי</mark>. שם נמצא הסגנון שלכם.</> : <>ב-<mark className="hl">{differ} מתוך {rows.length}</mark> הסברים חשבתם אחרת ממני. שם נמצא הסגנון שלכם.</>}
+      </p>
+      <ol className="grid grid-cols-[minmax(0,1fr)]">
+        {rows.map(({ c, i, primary, v }) => (
+          <li key={i} className="border-b border-border py-5">
+            <div className="mb-3 flex items-center gap-2 text-base">
+              <span className="num-mono text-xs text-muted-foreground" dir="ltr">{String(i + 1).padStart(2, '0')}</span>
+              <Glyph i={c.a} size={20} /><span>{ITEMS[c.a].l}</span>
+              <span className="h-px w-4" style={{ background: levelColor(c.ev.lv) }} />
+              <Glyph i={c.b} size={20} /><span>{ITEMS[c.b].l}</span>
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+              <div className="border-r-2 border-foreground/70 pr-3">
+                <p className="label-mono mb-1">אתם אמרתם</p>
+                <p className="text-[0.95rem] leading-relaxed">"{c.note}"</p>
+              </div>
+              <div className="border-r-2 pr-3" style={{ borderColor: levelColor(c.ev.lv) }}>
+                <p className="label-mono mb-1">אני פירשתי · <span style={{ color: levelColor(c.ev.lv) }}>{LEVEL_NAMES[c.ev.lv]}</span></p>
+                <p className="text-[0.95rem] leading-relaxed">{primary ? primary.sub.replace(/^[^—]*—\s*/, '') : c.ev.sub}</p>
+                {primary?.insight && <p className="mt-1 text-sm text-muted-foreground"><Rich text={primary.insight} /></p>}
+              </div>
+            </div>
+            <div className="mt-3"><VerdictLine v={v} /></div>
+          </li>
+        ))}
+      </ol>
+      <p className="label-mono mt-3">ההשוואה לפי מילים משותפות בין ההסבר שלכם לקריאות. הערכה, לא הבנה.</p>
+    </>
   );
 }

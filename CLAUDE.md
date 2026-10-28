@@ -58,6 +58,16 @@
   (`src/game/sons.ts`) as standing rows: each plays the real engine limited to the levels he can see
   (חכם all four up to sod, רשע up to drash, "לכם ולא לו", תם pshat and remez, שאינו יודע לשאול pshat only)
   and his pace of asking; scores are computed, never typed, and must stay in Haggadah order (tested).
+- Voice (2026-10-28, "לא תמיד מה שחשב השחקן זה מה שאתה פרשת"): the player explains each connection out
+  loud; live Hebrew transcription (Web Speech API, `src/hooks/useSpeech.ts`) appears beside the reading
+  (`src/components/VoiceNote.tsx`, full in the reading panel, compact in the phone strip), is saved as the
+  connection's note and compared with the readings at once (`src/lib/compare.ts`: shared content words,
+  shown to the player, labelled an estimate). The results screen opens with "מה אמרתם, מול מה שפירשתי".
+  Typing is always the fallback. The clock keeps running while recording.
+- Score in play (2026-10-28): each connection's points rise from the card in its level's colour, larger
+  the deeper the level, with chain bonus beneath; the HUD score flashes the level colour with "+N".
+- Navigation (2026-10-28): the current page is always visibly marked (weight, 2px bar, grey fill on
+  desktop; separate layoutIds per nav). The gold-on-ink logo (`src/components/Logo.tsx`) sits by the name.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## What "upgrade" means here

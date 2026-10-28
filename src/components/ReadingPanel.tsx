@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, levelColor, type Level } from '../game/gameItems';
 import { readingsFor, type Reading } from '../game/evaluator';
@@ -6,6 +6,7 @@ import { LEVEL_DEFS } from '../game/levelInfo';
 import Glyph from './Glyph';
 import Rich from './Rich';
 import { plain } from '../lib/marker';
+import VoiceNote from './VoiceNote';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
@@ -72,10 +73,6 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
   const primary = readings[0];
   const others = readings.slice(1);
   const chosen = readings.find(r => r.key === meant);
-  const [writing, setWriting] = useState(false);
-  const [draft, setDraft] = useState(note ?? '');
-
-  useEffect(() => { setWriting(false); setDraft(note ?? ''); }, [a, b, note]);
 
   if (!primary) return null;
   const def = LEVEL_DEFS[primary.lv];
@@ -99,6 +96,9 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
         <div className="mt-4"><DepthScale lv={primary.lv} /></div>
       </header>
 
+      {/* Their words, beside the reading: recorded, transcribed and compared live */}
+      <VoiceNote a={a} b={b} note={note} meant={meant} onNote={onNote} onMeant={onMeant} />
+
       {/* 2. The reading */}
       <section>
         <p className="label-mono mb-1.5">{primary.basis}</p>
@@ -115,7 +115,7 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
 
       {/* 4. What did you mean? */}
       <section>
-        <p className="label-mono mb-2">{others.length ? 'למה התכוונתם?' : 'התכוונתם למשהו אחר?'}</p>
+        {others.length > 0 && <p className="label-mono mb-2">למה התכוונתם?</p>}
         {others.length > 0 && (
           <ul className="border-t border-border">
             {readings.map((r, i) => {
@@ -148,37 +148,6 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
           </ul>
         )}
 
-        <div className="mt-3">
-          {note && !writing ? (
-            <div className="border-r-2 border-foreground pr-3">
-              <p className="label-mono mb-0.5">הקשר שלכם</p>
-              <p className="text-sm">{note}</p>
-              <button type="button" onClick={() => setWriting(true)} className="label-mono link-draw mt-1">עריכה</button>
-            </div>
-          ) : writing ? (
-            <form
-              onSubmit={e => { e.preventDefault(); onNote(draft.trim()); setWriting(false); }}
-              className="flex flex-col gap-2"
-            >
-              <label className="label-mono" htmlFor={`note-${a}-${b}`}>במילים שלכם, מה ראיתם?</label>
-              <textarea
-                id={`note-${a}-${b}`}
-                value={draft}
-                onChange={e => setDraft(e.target.value)}
-                rows={2}
-                maxLength={160}
-                autoFocus
-                className="w-full resize-none rounded-[2px] border border-border bg-surface-1 px-3 py-2 text-sm focus:border-foreground focus:outline-none"
-              />
-              <div className="flex gap-2">
-                <button type="submit" className="btn btn-primary h-9 px-4 text-sm">שמירה</button>
-                <button type="button" onClick={() => setWriting(false)} className="btn btn-text h-9 px-2 text-sm">ביטול</button>
-              </div>
-            </form>
-          ) : (
-            <button type="button" onClick={() => setWriting(true)} className="label-mono link-draw">ראיתם קשר אחר? כתבו אותו</button>
-          )}
-        </div>
         {(chosen && chosen.key !== primary.key) && (
           <p className="mt-3 text-[0.75rem] text-muted-foreground">הניקוד נשאר לפי הקריאה העמוקה ביותר. הבחירה שלכם נכנסת לפרופיל סגנון החשיבה.</p>
         )}
