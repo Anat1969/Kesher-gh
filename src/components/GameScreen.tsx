@@ -14,6 +14,7 @@ import Glyph from './Glyph';
 import type { Settings } from '../lib/storage';
 import ConnectionLines from './ConnectionLines';
 import AnimatedNumber from './AnimatedNumber';
+import SecretReveal, { SecretWash } from './SecretReveal';
 
 interface GameScreenProps {
   state: GameState;
@@ -33,7 +34,10 @@ interface GameScreenProps {
 
 const COLS = 5;
 const TRACK_MAX = MILESTONES[MILESTONES.length - 1].pts;
-const EASE = [0.4, 0, 0.2, 1] as const;
+/** Strong ease-out (Emil Kowalski): entering content starts at once and settles. */
+const EASE = [0.23, 1, 0.32, 1] as const;
+/** Things the player sees on every connection (tens of times a game) stay under 200ms. */
+const QUICK = 0.18;
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 function formatTime(t: number) {
@@ -80,7 +84,7 @@ export default function GameScreen({
     const w = well.getBoundingClientRect();
     const item: ScoreFloatItem = { id: lastEval.id, x: c.left - w.left + c.width / 2, y: c.top - w.top + c.height * 0.35, sc: lastEval.ev.sc, lv: lastEval.ev.lv, bonus };
     setFloats(f => [...f.slice(-3), item]);
-    const t = setTimeout(() => setFloats(f => f.filter(x => x.id !== item.id)), 1900);
+    const t = setTimeout(() => setFloats(f => f.filter(x => x.id !== item.id)), 1400);
     return () => { clearTimeout(t); clearTimeout(tf); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per connection
   }, [lastEval?.id]);
@@ -186,9 +190,9 @@ export default function GameScreen({
         ) : (<>
         <div className="relative h-px bg-border [@media(max-height:760px)]:hidden">
           <motion.div
-            className="absolute inset-y-0 right-0 bg-foreground"
+            className="absolute inset-0 origin-right bg-foreground"
             initial={false}
-            animate={{ width: `${(state.timeLeft / GAME_DURATION) * 100}%` }}
+            animate={{ scaleX: state.timeLeft / GAME_DURATION }}
             transition={{ duration: 1, ease: 'linear' }}
           />
         </div>
@@ -278,7 +282,7 @@ export default function GameScreen({
                   aria-label={`${item.l}${order ? `, מקום ${order} בשרשרת` : ''}${isActive ? ', הכרטיס הנוכחי' : ''}${isTarget ? ', היעד' : ''}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.012, duration: 0.5, ease: EASE }}
+                  transition={{ delay: i * 0.012, duration: 0.24, ease: EASE }}
                   style={{ containerType: 'inline-size' }}
                   className={`group relative flex aspect-square select-none flex-col justify-between rounded-[2px] border p-[clamp(3px,1vw,6px)] text-right transition-[background-color,color,border-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isActive
@@ -372,13 +376,13 @@ export default function GameScreen({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.35, ease: EASE }}
+                transition={{ duration: QUICK, ease: EASE }}
                 style={{ color: 'hsl(var(--chain))' }}
               >
                 {chainToast.count === 1 ? 'נחשף חיבור שרשרת' : `נחשפו ${chainToast.count} חיבורי שרשרת`}
               </motion.p>
             ) : (
-              <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}>
+              <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: QUICK, ease: EASE }}>
                 {daily
                   ? state.path.length === daily.links
                     ? <>הקשר האחרון חייב להגיע אל <span className="text-foreground">{ITEMS[daily.target].l}</span></>
@@ -401,10 +405,11 @@ export default function GameScreen({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.3, ease: EASE }}
-              className="px-4 py-3 [@media(max-height:760px)]:py-2"
+              transition={{ duration: QUICK, ease: EASE }}
+              className="relative isolate px-4 py-3 [@media(max-height:760px)]:py-2"
             >
-              <div className="flex items-baseline justify-between gap-3">
+              {isNewSecret && <SecretWash />}
+              <div className="relative flex items-baseline justify-between gap-3">
                 <div className="flex min-w-0 items-baseline gap-2.5">
                   <span className="text-lg font-light" style={{ color: levelColor(lastEval.ev.lv) }}>{LEVEL_NAMES[lastEval.ev.lv]}</span>
                   <span className="flex min-w-0 items-center gap-1.5 truncate text-base">
@@ -415,11 +420,7 @@ export default function GameScreen({
               </div>
               <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                 <span className="truncate text-[0.82rem]" style={{ color: levelColor(lastEval.ev.lv) }}>{lastEval.ev.sub.replace(/^[^—]*—\s*/, '')}</span>
-                {isNewSecret && (
-                  <span className="label-mono border px-1.5 py-px" style={{ color: levelColor('s'), borderColor: levelColor('s', 0.45) }}>
-                    סוד חדש נחשף
-                  </span>
-                )}
+                {isNewSecret && <SecretReveal compact />}
               </div>
               {lastConn && (
                 <VoiceNote
@@ -451,7 +452,7 @@ export default function GameScreen({
                 key={c.key}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4 }}
+                transition={{ duration: QUICK }}
                 className="flex flex-shrink-0 items-baseline gap-1.5 whitespace-nowrap text-[0.75rem]"
               >
                 <span className={c.isChain ? 'text-muted-foreground' : ''}>{ITEMS[c.a].l}·{ITEMS[c.b].l}</span>
@@ -466,15 +467,14 @@ export default function GameScreen({
     </div>
 
       {/* Reading, full (desktop side panel) */}
-      <aside className="panel hidden min-h-0 flex-col overflow-hidden lg:flex" aria-live="polite" aria-label="הקשר האחרון">
+      <aside className="panel relative isolate hidden min-h-0 flex-col overflow-hidden lg:flex" aria-live="polite" aria-label="הקשר האחרון">
         <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <AnimatePresence mode="wait" initial={false}>
             {lastEval ? (
-              <motion.div key={lastEval.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}>
-                {isNewSecret && (
-                  <p className="label-mono mb-4 w-fit border px-1.5 py-px" style={{ color: levelColor('s'), borderColor: levelColor('s', 0.45) }}>סוד חדש נחשף</p>
-                )}
-                {panel}
+              <motion.div key={lastEval.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: QUICK, ease: EASE }}>
+                {isNewSecret && <SecretWash />}
+                {isNewSecret && <SecretReveal />}
+                <div className="relative">{panel}</div>
               </motion.div>
             ) : (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -529,7 +529,7 @@ function Figure({ label, children, divider, role, ariaLabel, gain }: { label: st
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4, ease: EASE }}
+              transition={{ duration: QUICK, ease: EASE }}
               className="num-mono"
               style={{ color: levelColor(gain.lv) }}
               dir="ltr"
@@ -550,10 +550,10 @@ function MilestoneTrack({ total, current, next }: { total: number; current: Mile
     <div className="px-3 pb-2.5 pt-2 sm:px-4">
       <div className="relative h-[3px] bg-surface-3" role="progressbar" aria-label="התקדמות באבני הדרך" aria-valuenow={total} aria-valuemin={0} aria-valuemax={TRACK_MAX}>
         <motion.div
-          className="absolute inset-y-0 right-0 bg-foreground"
+          className="absolute inset-0 origin-right bg-foreground"
           initial={false}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.8, ease: EASE }}
+          animate={{ scaleX: pct / 100 }}
+          transition={{ duration: 0.3, ease: EASE }}
         />
         {MILESTONES.map(m => (
           <span
@@ -582,10 +582,10 @@ function ScoreFloat({ f }: { f: ScoreFloatItem }) {
     <motion.div
       className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
       style={{ left: f.x, top: f.y }}
-      initial={{ opacity: 0, y: 8, scale: 0.85 }}
+      initial={{ opacity: 0, y: 8, scale: 0.95 }}
       animate={{ opacity: [0, 1, 1, 0], y: -64, scale: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 1.7, times: [0, 0.12, 0.7, 1], ease: EASE }}
+      transition={{ duration: 1.2, times: [0, 0.12, 0.75, 1], ease: EASE }}
     >
       <span
         className="num-mono rounded-[2px] border bg-surface-1 px-2 font-light leading-tight shadow-md"
@@ -599,7 +599,7 @@ function ScoreFloat({ f }: { f: ScoreFloatItem }) {
         <motion.span
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.4 }}
+          transition={{ delay: 0.15, duration: QUICK }}
           className="num-mono mt-1 rounded-[2px] bg-surface-1/90 px-1 text-[0.85rem]"
           style={{ color: 'hsl(var(--chain))' }}
           dir="ltr"
@@ -614,7 +614,7 @@ function ScoreFloat({ f }: { f: ScoreFloatItem }) {
 /** The running score, flashing the colour of the level just earned. */
 function ScoreFigure({ value, flash }: { value: number; flash: { lv: Level } | null }) {
   return (
-    <span className="transition-colors duration-1000" style={{ color: flash ? levelColor(flash.lv) : 'hsl(var(--foreground))' }}>
+    <span className="transition-colors duration-200" style={{ color: flash ? levelColor(flash.lv) : 'hsl(var(--foreground))' }}>
       <AnimatedNumber value={value} className="display-num text-[2.4rem] [@media(max-height:760px)]:text-[1.8rem]" />
     </span>
   );

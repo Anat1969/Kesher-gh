@@ -8,7 +8,7 @@ import Rich from './Rich';
 import { plain } from '../lib/marker';
 import VoiceNote from './VoiceNote';
 
-const EASE = [0.4, 0, 0.2, 1] as const;
+const EASE = [0.23, 1, 0.32, 1] as const;
 
 interface ReadingPanelProps {
   a: number;
@@ -137,7 +137,7 @@ export default function ReadingPanel({ a, b, ordinal, meant, note, onMeant, onNo
                   </button>
                   <AnimatePresence initial={false}>
                     {chosen && r.key === chosen.key && i > 0 && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.35, ease: EASE }} className="overflow-hidden">
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2, ease: EASE }} className="overflow-hidden">
                         <div className="pb-3"><ReadingBody r={r} /><p className="mt-2 text-[0.78rem] text-muted-foreground"><Rich text={r.why} /></p></div>
                       </motion.div>
                     )}
