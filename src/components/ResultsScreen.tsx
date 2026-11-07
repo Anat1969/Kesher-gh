@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, MILESTONES, levelColor, type Level } from '../game/gameItems';
 import { analyzePersonality, type Connection } from '../game/personality';
 import { SECRET_KEYS, readingsFor, evaluate } from '../game/evaluator';
@@ -35,6 +35,7 @@ interface ResultsScreenProps {
 }
 
 const EASE = [0.4, 0, 0.2, 1] as const;
+const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 const inView = (delay = 0) => ({
   initial: { opacity: 0 },
   whileInView: { opacity: 1 },
@@ -54,9 +55,12 @@ function Section({ n, kicker, title, children }: { n: string; kicker: string; ti
 
 function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'directConns' | 'chainConns'>) {
   const used = new Set(directConns.flatMap(c => [c.a, c.b]));
+  // The map draws itself in the order it was played, when it scrolls into view (not unseen, above the fold).
+  const ref = useRef<HTMLDivElement>(null);
+  const seen = useInView(ref, { once: true, margin: '-40px' });
   return (
-    <div className="well relative mx-auto w-full max-w-[420px] p-2.5">
-      <ConnectionLines directConns={directConns} chainConns={chainConns} newestId={0} />
+    <div ref={ref} className="well relative mx-auto w-full max-w-[420px] p-2.5">
+      {seen && <ConnectionLines directConns={directConns} chainConns={chainConns} newestId={0} sequence />}
       <div className="relative z-[2] grid grid-cols-5 gap-1.5">
         {ITEMS.map((item, i) => (
           <span
@@ -292,15 +296,30 @@ function ChainRow({ path, levels }: { path: number[]; levels: Level[] }) {
   return (
     <ol className="flex items-start" aria-label={path.map(i => ITEMS[i].l).join(', ')}>
       {path.map((card, k) => (
-        <li key={k} className="flex flex-1 items-start last:flex-none">
+        // The chain is read link by link: each word and the line to the next enter in order (60ms apart).
+        <motion.li
+          key={k}
+          className="flex flex-1 items-start last:flex-none"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: k * 0.06, duration: 0.2, ease: EASE_OUT }}
+        >
           <span className="flex w-12 flex-col items-center gap-1 sm:w-14">
             <Glyph i={card} size={36} />
             <span className="truncate text-[0.7rem] text-muted-foreground">{ITEMS[card].l}</span>
           </span>
           {k < path.length - 1 && (
-            <span className="mt-[18px] h-[2px] flex-1" style={{ background: levels[k] ? levelColor(levels[k]) : 'hsl(var(--border))' }} />
+            <motion.span
+              className="mt-[18px] h-[2px] flex-1 origin-right"
+              style={{ background: levels[k] ? levelColor(levels[k]) : 'hsl(var(--border))' }}
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: k * 0.06 + 0.04, duration: 0.24, ease: EASE_OUT }}
+            />
           )}
-        </li>
+        </motion.li>
       ))}
     </ol>
   );

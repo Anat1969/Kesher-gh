@@ -88,6 +88,23 @@
   desktop; separate layoutIds per nav). The gold-on-ink logo (`src/components/Logo.tsx`) sits by the name.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
+## תעודת DNA (03.11.2026)
+
+- **בעלות ולוגו:** של ענת, הלוגו "אד' ענת שטיבלמן A&I" (`<ai-menu>`).
+- **מטאפורה:** גיליון שרטוט שעליו נמתחים קשרים בין מילים, מפשט עד סוד.
+- **חומר:** נייר ודיו, קווי שיער, צל רך אחד; ציורי כרטיסים בקו זהב חופשי.
+- **צבע:** הכלי אפור בלבד; צבע רק לארבע דרגות הקשר ולשרשרת, והזהב שמור לסוד.
+- **תנועה:** שקטה ומהירה בכל קשר (עד 200ms); רק "רגע הסוד" מקבל חשיפה מתוזמרת אחת (עד 400ms).
+
+## Motion gate (03.11.2026, Emil Kowalski's gate, owner-approved idea "רגע הסוד")
+
+- Only the first discovery of a hand-crafted secret is choreographed (`src/components/SecretReveal.tsx`:
+  gold wash, seal settles, gold hairline draws right to left, all within 400ms, transform/opacity only).
+- Everything seen on every connection stays under 200ms with the strong ease-out `[0.23, 1, 0.32, 1]`
+  (reading crossfade, hint, +N, new line 280ms). Tracks animate `scaleX`, never `width`.
+- Chains enter in order, 60ms apart (new chain lines in play, the results map and the daily chain row), never all at once.
+- Action buttons (`.btn`) are square with no visible frame: soft ground, shadow, lift on hover, `scale(0.97)` on press.
+
 ## What "upgrade" means here
 
 Work through these areas, highest impact first, and verify each change (lint, typecheck, tests, build):

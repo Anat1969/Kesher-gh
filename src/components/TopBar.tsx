@@ -69,7 +69,7 @@ function NavItem({ to, label, short, end, group }: { to: string; label: string; 
             <motion.span
               layoutId={`nav-underline-${group}`}
               className="absolute inset-x-1 bottom-0 h-[2px] bg-foreground md:inset-x-2"
-              transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
             />
           )}
         </>
