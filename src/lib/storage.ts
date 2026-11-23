@@ -1,4 +1,5 @@
 /** Small, failure-tolerant wrapper around localStorage for stats and settings. */
+import type { DeckMode } from '../game/deck';
 
 export interface GameRecord {
   date: string;
@@ -24,6 +25,8 @@ export interface Settings {
   haptics: boolean;
   /** Show word names under the drawings on the board. */
   labels: boolean;
+  /** Which board new games are dealt from. */
+  deck: DeckMode;
 }
 
 const STATS_KEY = 'kesher:stats:v1';
@@ -31,7 +34,7 @@ const SETTINGS_KEY = 'kesher:settings:v1';
 const HISTORY_LIMIT = 100;
 
 export const DEFAULT_STATS: Stats = { gamesPlayed: 0, bestScore: 0, totalConnections: 0, secrets: [], history: [] };
-export const DEFAULT_SETTINGS: Settings = { sound: true, haptics: true, labels: false };
+export const DEFAULT_SETTINGS: Settings = { sound: true, haptics: true, labels: false, deck: 'mix' };
 
 function read<T extends object>(key: string, fallback: T): T {
   try {

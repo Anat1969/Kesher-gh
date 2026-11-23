@@ -1,11 +1,11 @@
-import { ITEMS, type Level } from './gameItems';
+import { CLASSIC_DECK, type Level } from './gameItems';
 import { evaluate } from './evaluator';
 import { gameReducer, initialState, totalScore, type GameState } from './engine';
 
 /**
  * The four sons of the Passover Haggadah as standing players on the all-time board.
  * Each one plays the real game (same board, same scoring, same chain bonuses) with two limits
- * that follow the Haggadah: the levels of connection he is able to see, and how many links he
+ * that follow the Haggadah (always on the classic board, so the standing scores never move): the levels of connection he is able to see, and how many links he
  * makes in five minutes (how much he asks). His score is computed, never typed in.
  */
 export interface Son {
@@ -72,7 +72,7 @@ function playFrom(son: Son, start: number): GameState {
   const can = new Set(son.sees);
   while (state.directConns.length < son.links && state.screen === 'game') {
     let best: GameState | null = null;
-    for (let c = 0; c < ITEMS.length; c++) {
+    for (const c of CLASSIC_DECK) {
       if (state.path.includes(c) || !can.has(evaluate(state.currentCard, c).lv)) continue;
       const next = gameReducer(state, { type: 'pick', card: c });
       if (!best || totalScore(next) > totalScore(best)) best = next;
@@ -96,7 +96,7 @@ export function sonResults(): SonResult[] {
   if (cache) return cache;
   cache = SONS.map(son => {
     let top: GameState | null = null;
-    for (let s = 0; s < ITEMS.length; s++) {
+    for (const s of CLASSIC_DECK) {
       const g = playFrom(son, s);
       if (!top || totalScore(g) > totalScore(top)) top = g;
     }

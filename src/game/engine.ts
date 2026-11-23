@@ -1,10 +1,11 @@
-import { ITEMS, CHAIN_RATIO, type Level } from './gameItems';
+import { BOARD_SIZE, CLASSIC_DECK, CHAIN_RATIO, type Level } from './gameItems';
 import { evaluate, pairKey, type Evaluation } from './evaluator';
 import type { Connection } from './personality';
 import type { DailyConfig } from './daily';
 
 export const GAME_DURATION = 300;
-export const TOTAL_CARDS = ITEMS.length;
+/** Cards on one board (the pool holds more; see deck.ts). */
+export const TOTAL_CARDS = BOARD_SIZE;
 
 export type Screen = 'splash' | 'game' | 'results';
 export type Mode = 'classic' | 'daily';
@@ -23,6 +24,8 @@ export interface GameState {
   /** The day's challenge, when playing the daily mode. */
   daily: DailyConfig | null;
   paused: boolean;
+  /** The card ids on this board, in board order. */
+  deck: number[];
   currentCard: number;
   /** Cards in the order they were added to the chain. */
   path: number[];
@@ -43,7 +46,7 @@ export interface GameState {
 }
 
 export type GameAction =
-  | { type: 'start' }
+  | { type: 'start'; deck?: number[] }
   | { type: 'startDaily'; daily: DailyConfig }
   | { type: 'pick'; card: number }
   | { type: 'tick' }
@@ -60,6 +63,7 @@ export function initialState(screen: Screen = 'splash'): GameState {
     mode: 'classic',
     daily: null,
     paused: false,
+    deck: [...CLASSIC_DECK],
     currentCard: -1,
     path: [],
     pairs: [],
@@ -90,7 +94,7 @@ function chainConnection(x: number, y: number, bridge: number): Connection {
 
 function pick(state: GameState, card: number): GameState {
   if (state.screen !== 'game' || state.paused) return state;
-  if (card < 0 || card >= TOTAL_CARDS || card === state.currentCard) return state;
+  if (!state.deck.includes(card) || card === state.currentCard) return state;
 
   if (state.path.includes(card)) {
     return { ...state, dupCard: card, dupId: state.dupId + 1 };
@@ -125,7 +129,7 @@ function pick(state: GameState, card: number): GameState {
   }
 
   const path = [...state.path, b];
-  const done = daily ? b === daily.target : path.length === TOTAL_CARDS;
+  const done = daily ? b === daily.target : path.length === state.deck.length;
 
   return {
     ...state,
@@ -147,10 +151,10 @@ function pick(state: GameState, card: number): GameState {
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'start':
-      return initialState('game');
+      return { ...initialState('game'), deck: action.deck ?? [...CLASSIC_DECK] };
     case 'startDaily': {
       const s = action.daily.start;
-      return { ...initialState('game'), mode: 'daily', daily: action.daily, currentCard: s, path: [s] };
+      return { ...initialState('game'), mode: 'daily', daily: action.daily, deck: [...action.daily.deck], currentCard: s, path: [s] };
     }
     case 'pick':
       return pick(state, action.card);

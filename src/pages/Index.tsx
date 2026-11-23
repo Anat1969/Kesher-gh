@@ -28,6 +28,7 @@ const Index = () => {
         onPlayAgain={game.startGame}
         daily={state.mode === 'daily' ? state.daily : null}
         path={state.path}
+        deck={state.deck}
         onDaily={game.startDaily}
         onMenu={game.resetGame}
       />

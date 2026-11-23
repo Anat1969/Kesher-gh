@@ -101,13 +101,14 @@ export default function GameScreen({
 
   // Arrow-key navigation across the grid (RTL: ArrowLeft moves forward).
   const onGridKey = (e: KeyboardEvent<HTMLDivElement>) => {
-    const i = cardRefs.current.findIndex(el => el === document.activeElement);
-    if (i < 0) return;
+    // Refs are keyed by card id; arrows move by position on this board.
+    const pos = state.deck.findIndex(id => cardRefs.current[id] === document.activeElement);
+    if (pos < 0) return;
     const delta = { ArrowLeft: 1, ArrowRight: -1, ArrowDown: COLS, ArrowUp: -COLS }[e.key];
     if (delta === undefined) return;
     e.preventDefault();
-    const next = Math.min(TOTAL_CARDS - 1, Math.max(0, i + delta));
-    cardRefs.current[next]?.focus();
+    const next = Math.min(state.deck.length - 1, Math.max(0, pos + delta));
+    cardRefs.current[state.deck[next]]?.focus();
   };
 
   const isNewSecret = !!lastEval && isHandCraftedSecret(lastEval.a, lastEval.b) && !knownSecrets.has(pairKey(lastEval.a, lastEval.b));
@@ -259,7 +260,8 @@ export default function GameScreen({
             className="relative z-[2] grid grid-cols-5"
             style={{ gap: 'clamp(4px, 1.4vw, 8px)' }}
           >
-            {ITEMS.map((item, i) => {
+            {state.deck.map((i, pos) => {
+              const item = ITEMS[i];
               const isActive = state.currentCard === i;
               const inChain = state.path.includes(i);
               const isUsed = inChain && !isActive;
@@ -282,7 +284,7 @@ export default function GameScreen({
                   aria-label={`${item.l}${order ? `, מקום ${order} בשרשרת` : ''}${isActive ? ', הכרטיס הנוכחי' : ''}${isTarget ? ', היעד' : ''}`}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.012, duration: 0.24, ease: EASE }}
+                  transition={{ delay: pos * 0.012, duration: 0.24, ease: EASE }}
                   style={{ containerType: 'inline-size' }}
                   className={`group relative flex aspect-square select-none flex-col justify-between rounded-[2px] border p-[clamp(3px,1vw,6px)] text-right transition-[background-color,color,border-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isActive

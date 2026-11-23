@@ -5,6 +5,7 @@ import { isHandCraftedSecret, pairKey } from '../game/evaluator';
 import { analyzePersonality } from '../game/personality';
 import { sounds, vibrate } from '../lib/feedback';
 import { dailyFor, dateKey } from '../game/daily';
+import { dealDeck } from '../game/deck';
 import {
   loadSettings, loadStats, recordGame, mergeHistory, saveSettings, loadDaily, recordDaily, type DailyResult,
   type RecordResult, type Settings, type Stats,
@@ -159,7 +160,7 @@ export function useGameState() {
     return { name, added };
   }, []);
 
-  const startGame = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'start' }); }, []);
+  const startGame = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'start', deck: dealDeck(settingsRef.current.deck) }); }, []);
   const startDaily = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'startDaily', daily: dailyFor(dateKey()) }); }, []);
   const resetGame = useCallback(() => dispatch({ type: 'menu' }), []);
   const pause = useCallback(() => dispatch({ type: 'pause' }), []);

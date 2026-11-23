@@ -1,4 +1,5 @@
-import { ITEMS, SCORE_VALUES } from './gameItems';
+import { CLASSIC_DECK, ITEMS, SCORE_VALUES } from './gameItems';
+import { dealDeck } from './deck';
 import { evaluate } from './evaluator';
 
 /** The daily challenge: the same start, target and length for everyone on a given day. */
@@ -14,10 +15,14 @@ export interface DailyConfig {
   /** Highest score any chain of this length can reach today, and one chain that reaches it. */
   best: number;
   bestPath: number[];
+  /** The day's board (25 card ids). */
+  deck: number[];
 }
 
 export const DAILY_LINKS = 5;
 const EPOCH = Date.UTC(2026, 9, 27); // challenge #1
+/** From this day the daily board is dealt from the whole pool; earlier days keep the classic board. */
+export const MIXED_FROM = '2026-11-24';
 
 export function dateKey(d = new Date()): string {
   const p = (n: number) => String(n).padStart(2, '0');
@@ -45,14 +50,16 @@ function rng(seed: string) {
   };
 }
 
-let scores: number[][] | null = null;
+const scores = new Map<number, number>();
 const score = (a: number, b: number) => {
-  if (!scores) scores = ITEMS.map((_, i) => ITEMS.map((__, j) => (i === j ? 0 : evaluate(i, j).sc)));
-  return scores[a][b];
+  const k = a * ITEMS.length + b;
+  let v = scores.get(k);
+  if (v === undefined) { v = a === b ? 0 : evaluate(a, b).sc; scores.set(k, v); }
+  return v;
 };
 
 /** Best chain of exactly `links` connections from start to target, without repeating a card. */
-export function bestChain(start: number, target: number, links: number): { best: number; path: number[] } {
+export function bestChain(start: number, target: number, links: number, deck: readonly number[] = CLASSIC_DECK): { best: number; path: number[] } {
   let best = -1;
   let bestPath: number[] = [];
   const path = [start];
@@ -66,7 +73,7 @@ export function bestChain(start: number, target: number, links: number): { best:
       return;
     }
     if (total + left * maxStep <= best) return;
-    for (let n = 0; n < ITEMS.length; n++) {
+    for (const n of deck) {
       if (used.has(n) || n === target) continue;
       used.add(n); path.push(n);
       walk(n, total + score(at, n));
@@ -83,11 +90,15 @@ export function dailyFor(key = dateKey()): DailyConfig {
   const hit = cache.get(key);
   if (hit) return hit;
   const r = rng(`kesher:${key}`);
-  const start = Math.floor(r() * ITEMS.length);
-  let target = Math.floor(r() * (ITEMS.length - 1));
-  if (target >= start) target++;
-  const { best, path } = bestChain(start, target, DAILY_LINKS);
-  const cfg: DailyConfig = { key, number: dayNumber(key), start, target, links: DAILY_LINKS, best, bestPath: path };
+  const mixed = key >= MIXED_FROM;
+  const deck = mixed ? dealDeck('mix', r) : [...CLASSIC_DECK];
+  // Same draw as before the pool grew, so past challenges keep their start and target.
+  const s = Math.floor(r() * deck.length);
+  let t = Math.floor(r() * (deck.length - 1));
+  if (t >= s) t++;
+  const start = deck[s], target = deck[t];
+  const { best, path } = bestChain(start, target, DAILY_LINKS, deck);
+  const cfg: DailyConfig = { key, number: dayNumber(key), start, target, links: DAILY_LINKS, best, bestPath: path, deck };
   cache.set(key, cfg);
   return cfg;
 }

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, MILESTONES, levelColor, type Level } from '../game/gameItems';
+import { CLASSIC_DECK, ITEMS, LEVEL_NAMES, LEVEL_ORDER, MILESTONES, levelColor, type Level } from '../game/gameItems';
 import { analyzePersonality, type Connection } from '../game/personality';
 import { SECRET_KEYS, readingsFor, evaluate } from '../game/evaluator';
 import type { RecordResult, Stats } from '../lib/storage';
@@ -32,6 +32,8 @@ interface ResultsScreenProps {
   daily?: DailyConfig | null;
   path?: number[];
   onDaily?: () => void;
+  /** The board the game was played on. */
+  deck?: readonly number[];
 }
 
 const EASE = [0.4, 0, 0.2, 1] as const;
@@ -53,7 +55,7 @@ function Section({ n, kicker, title, children }: { n: string; kicker: string; ti
   );
 }
 
-function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'directConns' | 'chainConns'>) {
+function ConnectionMap({ directConns, chainConns, deck }: Pick<ResultsScreenProps, 'directConns' | 'chainConns'> & { deck: readonly number[] }) {
   const used = new Set(directConns.flatMap(c => [c.a, c.b]));
   // The map draws itself in the order it was played, when it scrolls into view (not unseen, above the fold).
   const ref = useRef<HTMLDivElement>(null);
@@ -62,7 +64,7 @@ function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'di
     <div ref={ref} className="well relative mx-auto w-full max-w-[420px] p-2.5">
       {seen && <ConnectionLines directConns={directConns} chainConns={chainConns} newestId={0} sequence />}
       <div className="relative z-[2] grid grid-cols-5 gap-1.5">
-        {ITEMS.map((item, i) => (
+        {deck.map(i => ({ item: ITEMS[i], i })).map(({ item, i }) => (
           <span
             key={i}
             data-card={i}
@@ -80,7 +82,7 @@ function ConnectionMap({ directConns, chainConns }: Pick<ResultsScreenProps, 'di
 }
 
 export default function ResultsScreen({
-  directConns, chainConns, score, chainScore, stats, record, onPlayAgain, onMenu, daily = null, path = [], onDaily = onPlayAgain,
+  directConns, chainConns, score, chainScore, stats, record, onPlayAgain, onMenu, daily = null, path = [], onDaily = onPlayAgain, deck = CLASSIC_DECK,
 }: ResultsScreenProps) {
   const [shareState, setShareState] = useState<ShareOutcome | null>(null);
   const [openLog, setOpenLog] = useState<number | null>(null);
@@ -244,7 +246,7 @@ export default function ResultsScreen({
 
         {directConns.length > 0 && (
           <Section n={next()} kicker="מפה" title="מפת הקשרים שלך">
-            <ConnectionMap directConns={directConns} chainConns={chainConns} />
+            <ConnectionMap directConns={directConns} chainConns={chainConns} deck={deck} />
           </Section>
         )}
 

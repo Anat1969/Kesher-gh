@@ -34,8 +34,40 @@ export const ITEMS: GameItem[] = [
   {e:'💡',l:'רעיון', p:'abstract',s:'mind',   arch:'hero',    proc:'illuminate',par:'appears from nothing',t:['creativity','insight','light','discovery','innovation','electricity','sudden','potential']},
   {e:'🔮',l:'בדולח', p:'object', s:'mystery', arch:'anima',   proc:'predict',  par:'reveals future by reflecting present',t:['mystery','future','vision','prediction','crystal','sphere','light','illusion']},
   {e:'🕰️',l:'שעון',  p:'object', s:'time',    arch:'sage',    proc:'measure',  par:'counts what cannot be stopped',t:['time','precision','cycle','order','measurement','past','mortality','motion']},
-  {e:'🦁',l:'אריה',  p:'animal', s:'land',    arch:'ruler',   proc:'dominate', par:'king who fears nothing fears death',t:['power','leadership','danger','wild','majesty','pride','king','strength','gold']}
+  {e:'🦁',l:'אריה',  p:'animal', s:'land',    arch:'ruler',   proc:'dominate', par:'king who fears nothing fears death',t:['power','leadership','danger','wild','majesty','pride','king','strength','gold']},
+  // ── Second set (25–49): more concepts, the human body and the built world ──
+  {e:'🌳',l:'עץ',    p:'nature', s:'plant',   arch:'sage',    proc:'root',     par:'the deeper the roots the higher the crown',t:['growth','life','ancient','earth','green','time','connection','witness']},
+  {e:'⭐',l:'כוכב',  p:'nature', s:'sky',     arch:'innocent',proc:'shine',    par:'its light may outlive it',t:['light','distance','past','night','nuclear','infinite','direction','sky']},
+  {e:'🌈',l:'קשת',   p:'nature', s:'sky',     arch:'innocent',proc:'refract',  par:'exists only where you stand',t:['colorful','light','ephemeral','beauty','reflection','water','sky']},
+  {e:'👁️',l:'עין',   p:'human',  s:'body',    arch:'sage',    proc:'see',      par:'sees everything but itself',t:['vision','light','reflection','clarity','identity','emotion','focus','precision']},
+  {e:'❤️',l:'לב',    p:'human',  s:'body',    arch:'lover',   proc:'beat',     par:'the strongest muscle is the symbol of softness',t:['love','emotion','rhythm','life','passion','red','cyclic','strength']},
+  {e:'👤',l:'צל',    p:'abstract',s:'light',  arch:'shadow',  proc:'follow',   par:'made of the absence of light',t:['night','hide','duality','illusion','light','silent','identity','motion']},
+  {e:'💭',l:'חלום',  p:'abstract',s:'mind',   arch:'anima',   proc:'imagine',  par:'most real while it is not',t:['illusion','future','story','memory','night','creativity','hidden','emotion']},
+  {e:'♾️',l:'אינסוף',p:'abstract',s:'math',   arch:'self',    proc:'extend',   par:'endless fits between zero and one',t:['infinite','cyclic','mystery','pattern','time','eternal','distance']},
+  {e:'🌀',l:'מבוך',  p:'built',  s:'path',    arch:'trickster',proc:'wind',    par:'the way to the centre leads away from it',t:['complexity','solution','mystery','direction','pattern','spiral','ancient','story']},
+  {e:'🪞',l:'מראה',  p:'object', s:'glass',   arch:'trickster',proc:'reflect', par:'shows you as no one else sees you',t:['reflection','illusion','identity','light','clarity','duality','vision','truth']},
+  {e:'🌉',l:'גשר',   p:'built',  s:'span',    arch:'hero',    proc:'span',     par:'connects by standing over the gap',t:['connection','access','direction','balance','unity','portal','solid','distance']},
+  {e:'🕯️',l:'נר',    p:'object', s:'light',   arch:'innocent',proc:'burn',     par:'gives light by consuming itself',t:['light','fire','consume','ephemeral','warmth','time','memory','silence']},
+  {e:'🪶',l:'נוצה',  p:'animal', s:'air',     arch:'innocent',proc:'float',    par:'the lightest thing weighs the heart',t:['flight','delicate','freedom','weight','truth','judgment','language','small']},
+  {e:'🐝',l:'דבורה', p:'animal', s:'air',     arch:'ruler',   proc:'gather',   par:'the smallest one feeds the world',t:['order','pattern','language','small','gold','survival','connection','precision']},
+  {e:'🪨',l:'אבן',   p:'nature', s:'earth',   arch:'sage',    proc:'endure',   par:'the hardest is shaped by the softest',t:['solid','hard','ancient','witness','record','silence','weight','time']},
+  {e:'☁️',l:'ענן',   p:'nature', s:'sky',     arch:'trickster',proc:'drift',   par:'tons of water that float',t:['water','motion','ephemeral','flow','illusion','cyclic','sky','hide']},
+  {e:'🧠',l:'זיכרון',p:'abstract',s:'mind',   arch:'sage',    proc:'recall',   par:'every recall rewrites it',t:['memory','past','story','record','identity','time','emotion','hidden']},
+  {e:'🤫',l:'שתיקה', p:'abstract',s:'sound',  arch:'sage',    proc:'pause',    par:'music is made of it',t:['silence','silent','depth','rhythm','mystery','truth','emotion']},
+  {e:'🕊️',l:'חופש',  p:'abstract',s:'value',  arch:'hero',    proc:'release',  par:'needs a limit to exist',t:['freedom','flight','decision','direction','identity','potential','unlock','wild']},
+  {e:'🔤',l:'מילה',  p:'art',    s:'language',arch:'sage',    proc:'name',     par:'is not the thing and yet makes it',t:['language','record','story','identity','creation','connection','knowledge','power']},
+  {e:'0️⃣',l:'אפס',   p:'abstract',s:'math',   arch:'trickster',proc:'hold place',par:'nothing that makes every number possible',t:['missing','pattern','measurement','beginning','order','mystery','precision','infinite']},
+  {e:'🗼',l:'מגדלור',p:'built',  s:'tower',   arch:'hero',    proc:'signal',   par:'warns away from where it stands',t:['light','direction','danger','solid','tall','vision','cyclic','silence']},
+  {e:'🏠',l:'בית',   p:'built',  s:'home',    arch:'self',    proc:'shelter',  par:'four walls hold a whole world',t:['identity','memory','solid','unity','life','order','earth','whole']},
+  {e:'💃',l:'מחול',  p:'art',    s:'dance',   arch:'lover',   proc:'move',     par:'goes nowhere and arrives',t:['rhythm','motion','emotion','language','pattern','beauty','cyclic','passion']},
+  {e:'🐚',l:'צדף',   p:'nature', s:'water',   arch:'self',    proc:'coil',     par:'an empty shell holds the sound of the sea',t:['spiral','fibonacci','pattern','water','hidden','ancient','beauty','record']}
 ];
+
+/** Cards on one board. The pool holds more; each game deals a board from it. */
+export const BOARD_SIZE = 25;
+/** The original board, and the second set. */
+export const CLASSIC_DECK: readonly number[] = Array.from({ length: 25 }, (_, i) => i);
+export const NEW_DECK: readonly number[] = Array.from({ length: ITEMS.length - 25 }, (_, i) => 25 + i);
 
 export const SCORE_VALUES = { p: 5, r: 10, d: 18, s: 30 } as const;
 export const CHAIN_RATIO = 0.4;
