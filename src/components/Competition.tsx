@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { fetchBoard, type BoardRow, type Mode } from '../lib/remote';
 import { dateKey } from '../game/daily';
-import { sonReached, sonResults } from '../game/sons';
+import { sonReached, sonStanding } from '../game/sons';
+import { DECK_MODES, type DeckMode } from '../game/deck';
 import { levelColor, LEVEL_ORDER, type Level } from '../game/gameItems';
 
 /** Nickname field: the only thing besides the score that leaves the device. */
@@ -33,7 +34,8 @@ export function JoinForm({ cta = 'הצטרפות לתחרות', initial = '', on
 /** Results screen: where this game stands among all players. */
 export function CompetitionCard({ mode }: { mode: Mode }) {
   const { player, remote } = useGame();
-  const board = mode === 'daily' ? 'בטבלת האתגר היומי' : 'בטבלה הכללית';
+  const kind = remote.status === 'done' && remote.board !== 'daily' ? remote.board : 'classic';
+  const board = mode === 'daily' ? 'בטבלת האתגר היומי' : `בטבלת הלוח ה${DECK_MODES.find(m => m.id === kind)?.label ?? 'קלאסי'}`;
 
   return (
     <section className="mt-12 border-t border-foreground/80 pt-5" aria-live="polite">
@@ -51,7 +53,7 @@ export function CompetitionCard({ mode }: { mode: Mode }) {
               <mark className="hl">מקום {remote.rank}</mark> {board}
             </p>
             <p className="label-mono mt-2">{player.name} · השיא שלכם <span className="num-mono" dir="ltr">{remote.best}</span></p>
-            {mode === 'classic' && <SonLine score={remote.best} />}
+            {mode === 'classic' && <SonLine score={remote.best} board={kind} />}
             <Link to="/board" className="label-mono link-draw mt-3 inline-block">לטבלה המלאה</Link>
           </div>
           <div className="display-num text-6xl" dir="ltr">#{remote.rank}</div>
@@ -73,9 +75,9 @@ export function CompetitionCard({ mode }: { mode: Mode }) {
 const sonThe = (name: string) => (name.startsWith('שאינו') ? `בן ${name}` : name);
 
 /** Which of the four sons a score reaches. */
-export function SonLine({ score }: { score: number }) {
-  const son = sonReached(score);
-  const sons = sonResults();
+export function SonLine({ score, board = 'classic' }: { score: number; board?: DeckMode }) {
+  const son = sonReached(score, board);
+  const sons = sonStanding(board);
   const next = son ? sons[sons.indexOf(son) - 1] : sons[sons.length - 1];
   return (
     <p className="mt-2 text-base font-light">
@@ -95,7 +97,7 @@ type Row =
  * One leaderboard: each player's best, the viewer's row marked. The all-time board always holds
  * the four sons as standing rows, so every score can be read against a level of thinking.
  */
-export function Leaderboard({ mode }: { mode: Mode }) {
+export function Leaderboard({ mode, board = 'classic' }: { mode: Mode; board?: DeckMode }) {
   const { player, remote } = useGame();
   const [load, setLoad] = useState<Load>({ state: 'loading' });
   const day = dateKey();
@@ -106,15 +108,15 @@ export function Leaderboard({ mode }: { mode: Mode }) {
   useEffect(() => {
     let live = true;
     setLoad({ state: 'loading' });
-    fetchBoard(mode, mode === 'daily' ? day : null).then(rows => {
+    fetchBoard(mode, mode === 'daily' ? day : null, 20, board).then(rows => {
       if (live) setLoad(rows ? { state: 'ok', rows } : { state: 'error' });
     });
     return () => { live = false; };
-  }, [mode, day, sent, player?.name]);
+  }, [mode, board, day, sent, player?.name]);
 
   const players: Row[] = load.state === 'ok' ? load.rows.map(r => ({ kind: 'player', id: r.player_id, name: r.name, best: r.best, games: r.games })) : [];
   const sons: Row[] = withSons
-    ? sonResults().map(s => ({ kind: 'son', id: s.id, name: s.name, best: s.best, deepest: LEVEL_ORDER.filter(l => s.sees.includes(l)).pop()! }))
+    ? sonStanding(board).map(s => ({ kind: 'son', id: s.id, name: s.name, best: s.best, deepest: LEVEL_ORDER.filter(l => s.sees.includes(l)).pop()! }))
     : [];
   const rows = [...players, ...sons].sort((a, b) => b.best - a.best || (a.kind === 'son' ? 1 : -1));
   const mine = players.some(r => r.id === player?.id);

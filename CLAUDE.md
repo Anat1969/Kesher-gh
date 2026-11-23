@@ -93,6 +93,17 @@
   "קלאסי" or "חדש". Daily boards are dealt from the pool from 2026-11-24 (`MIXED_FROM`); earlier days keep the
   classic board. The four sons always play the classic board. A new card needs: ITEMS entry, LEXICON entry with a
   note for every tag, a drawing, and passes `src/game/__tests__/pool.test.ts`.
+- Story of the chain (23.11.2026, "לספר את הסיפור של הקשר בין תמונה לתמונה"): the results screen tells the
+  player's chain as one story, picture to picture (`src/lib/story.ts`, `src/components/StoryCard.tsx`): opening
+  on the first card's essence, a sentence per link from the reading the player meant (or the game's own) with
+  their own words woven in, a turning point when one link stands deepest, and a closing with the recurring
+  thread. Built only from the lexicon and readings, never invented. Verbs agree with feminine card names.
+  "כתיבה ספרותית" asks the Edge Function `kesher-story` (Gemini first, Claude fallback) to retell it from the
+  same facts only, labelled as model-written; "הקראת הסיפור" reads it aloud (speechSynthesis he-IL).
+- Leaderboard per board (23.11.2026): `kesher_scores.board` ('classic' | 'mix' | 'new'); the client calls
+  `kesher_submit_v2` / `kesher_leaderboard_v2` (v1 kept for installed old versions). `/board` has tabs
+  מתחלף / קלאסי / חדש / היום. The sons' standing scores per board live in `STANDING` (sons.ts) for speed,
+  and `sons.test` recomputes all three and fails on any difference ("computed, never typed").
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sonResults, sonReached } from '../sons';
+import { sonResults, sonReached, STANDING } from '../sons';
 
 describe('the four sons', () => {
   const r = sonResults();
@@ -20,4 +20,11 @@ describe('the four sons', () => {
     expect(sonReached(r[3].best - 1)).toBeNull();
     expect(sonReached(r[2].best)?.name).toBe('תם');
   });
+  it('standing scores are the computed ones, in Haggadah order, on every board', () => {
+    for (const b of ['classic', 'new', 'mix'] as const) {
+      const bests = sonResults(b).map(s => s.best);
+      expect(bests, b).toEqual(STANDING[b]);
+      expect([...bests].sort((x, y) => y - x), b).toEqual(bests);
+    }
+  }, 30000);
 });
