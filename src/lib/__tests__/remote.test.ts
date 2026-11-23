@@ -26,7 +26,7 @@ describe('remote calls', () => {
     const res = await submitScore({ id: 'p', key: 'k'.repeat(32), name: 'א' }, { mode: 'classic', day: '2026-10-27', score: 210.4, connections: 12, deep: 0.33333 });
     expect(res).toEqual({ best: 210, rank: 3 });
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toMatch(/\/rest\/v1\/rpc\/kesher_submit$/);
+    expect(url).toMatch(/\/rest\/v1\/rpc\/kesher_submit_v2$/);
     expect(JSON.parse(init.body)).toMatchObject({ p_mode: 'classic', p_day: null, p_score: 210, p_deep: 0.333 });
   });
 

@@ -5,7 +5,7 @@ import { isHandCraftedSecret, pairKey } from '../game/evaluator';
 import { analyzePersonality } from '../game/personality';
 import { sounds, vibrate } from '../lib/feedback';
 import { dailyFor, dateKey } from '../game/daily';
-import { dealDeck } from '../game/deck';
+import { dealDeck, type DeckMode } from '../game/deck';
 import {
   loadSettings, loadStats, recordGame, mergeHistory, saveSettings, loadDaily, recordDaily, type DailyResult,
   type RecordResult, type Settings, type Stats,
@@ -15,7 +15,7 @@ import { adoptPlayer, fetchHistory, loadPlayer, parseCode, savePlayer, submitSco
 export type RemoteStatus =
   | { status: 'idle' }
   | { status: 'sending' }
-  | { status: 'done'; best: number; rank: number }
+  | { status: 'done'; best: number; rank: number; board: DeckMode | 'daily' }
   | { status: 'error' };
 
 const deepShare = (lvs: string[]) => (lvs.length ? lvs.filter(l => l === 'd' || l === 's').length / lvs.length : 0);
@@ -36,7 +36,7 @@ export function useGameState() {
   const send = useCallback(async (p: Player, sub: Submission) => {
     setRemote({ status: 'sending' });
     const res = await submitScore(p, sub);
-    setRemote(res ? { status: 'done', best: res.best, rank: res.rank } : { status: 'error' });
+    setRemote(res ? { status: 'done', best: res.best, rank: res.rank, board: sub.mode === 'daily' ? 'daily' : sub.board ?? 'classic' } : { status: 'error' });
   }, []);
 
   const settingsRef = useRef(settings);
@@ -118,7 +118,7 @@ export function useGameState() {
     setStats(result.stats);
     setLastRecord(result);
     feedback(sounds.finish, [30, 50, 30, 50, 80]);
-    lastSubmission.current = { mode: 'classic', day: null, score: sumScore(state), connections: state.directConns.length, deep };
+    lastSubmission.current = { mode: 'classic', day: null, score: sumScore(state), connections: state.directConns.length, deep, board: boardRef.current };
     const p = loadPlayer();
     if (p) void send(p, lastSubmission.current);
   }, [state, feedback, send]);
@@ -160,7 +160,14 @@ export function useGameState() {
     return { name, added };
   }, []);
 
-  const startGame = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'start', deck: dealDeck(settingsRef.current.deck) }); }, []);
+  /** The kind of board the current classic game was dealt from (each has its own table). */
+  const boardRef = useRef<DeckMode>('classic');
+  const startGame = useCallback(() => {
+    setLastRecord(null);
+    setRemote({ status: 'idle' });
+    boardRef.current = settingsRef.current.deck;
+    dispatch({ type: 'start', deck: dealDeck(boardRef.current) });
+  }, []);
   const startDaily = useCallback(() => { setLastRecord(null); setRemote({ status: 'idle' }); dispatch({ type: 'startDaily', daily: dailyFor(dateKey()) }); }, []);
   const resetGame = useCallback(() => dispatch({ type: 'menu' }), []);
   const pause = useCallback(() => dispatch({ type: 'pause' }), []);

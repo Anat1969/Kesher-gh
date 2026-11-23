@@ -1,4 +1,5 @@
-import { CLASSIC_DECK, type Level } from './gameItems';
+import { CLASSIC_DECK, NEW_DECK, type Level } from './gameItems';
+import { dealDeck, type DeckMode } from './deck';
 import { evaluate } from './evaluator';
 import { gameReducer, initialState, totalScore, type GameState } from './engine';
 
@@ -67,12 +68,12 @@ export const SONS: Son[] = [
   },
 ];
 
-function playFrom(son: Son, start: number): GameState {
-  let state = gameReducer(initialState('game'), { type: 'pick', card: start });
+function playFrom(son: Son, start: number, deck: readonly number[]): GameState {
+  let state = gameReducer({ ...initialState('game'), deck: [...deck] }, { type: 'pick', card: start });
   const can = new Set(son.sees);
   while (state.directConns.length < son.links && state.screen === 'game') {
     let best: GameState | null = null;
-    for (const c of CLASSIC_DECK) {
+    for (const c of deck) {
       if (state.path.includes(c) || !can.has(evaluate(state.currentCard, c).lv)) continue;
       const next = gameReducer(state, { type: 'pick', card: c });
       if (!best || totalScore(next) > totalScore(best)) best = next;
@@ -89,23 +90,67 @@ export interface SonResult extends Son {
   levels: Level[];
 }
 
-let cache: SonResult[] | null = null;
+/** A son's best game on one board: his strategy from every start card. */
+function bestOn(son: Son, deck: readonly number[]): GameState {
+  let top: GameState | null = null;
+  for (const s of deck) {
+    const g = playFrom(son, s, deck);
+    if (!top || totalScore(g) > totalScore(top)) top = g;
+  }
+  return top!;
+}
 
-/** Each son's best game: his strategy (always the strongest link he can see) from every start card. */
-export function sonResults(): SonResult[] {
-  if (cache) return cache;
-  cache = SONS.map(son => {
-    let top: GameState | null = null;
-    for (const s of CLASSIC_DECK) {
-      const g = playFrom(son, s);
-      if (!top || totalScore(g) > totalScore(top)) top = g;
-    }
-    return { ...son, best: totalScore(top!), path: top!.path, levels: top!.directConns.map(c => c.ev.lv) };
+/** Seeded boards for the "changing board" standing score: the same for every visitor. */
+const MIX_SAMPLE = 4;
+function seeded(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const cache = new Map<DeckMode, SonResult[]>();
+
+/**
+ * Each son's standing score on a kind of board. Classic and new: his best game on that board.
+ * Changing board: the mean of his best games on a fixed sample of dealt boards, since every
+ * player meets a different one.
+ */
+export function sonResults(board: DeckMode = 'classic'): SonResult[] {
+  const hit = cache.get(board);
+  if (hit) return hit;
+  const decks = board === 'classic' ? [CLASSIC_DECK] : board === 'new' ? [NEW_DECK]
+    : Array.from({ length: MIX_SAMPLE }, (_, k) => dealDeck('mix', seeded(2026 + k)));
+  const out = SONS.map(son => {
+    const games = decks.map(d => bestOn(son, d));
+    const mean = Math.round(games.reduce((t, g) => t + totalScore(g), 0) / games.length);
+    const top = games[0];
+    return { ...son, best: mean, path: top.path, levels: top.directConns.map(c => c.ev.lv) };
   });
-  return cache;
+  cache.set(board, out);
+  return out;
+}
+
+/**
+ * The standing scores as the board shows them, without making the visitor wait for the search.
+ * They are the output of sonResults(), never typed by hand: sons.test recomputes all three
+ * boards and fails if one number here differs.
+ */
+export const STANDING: Record<DeckMode, number[]> = {
+  classic: [688, 400, 208, 48],
+  new: [680, 404, 196, 22],
+  mix: [680, 402, 202, 37],
+};
+
+/** The four sons with their standing score on a board (instant). */
+export function sonStanding(board: DeckMode = 'classic') {
+  return SONS.map((son, i) => ({ ...son, best: STANDING[board][i] }));
 }
 
 /** The highest son a score reaches or passes, or null below all four. */
-export function sonReached(score: number): SonResult | null {
-  return sonResults().find(s => score >= s.best) ?? null;
+export function sonReached(score: number, board: DeckMode = 'classic') {
+  return sonStanding(board).find(s => score >= s.best) ?? null;
 }

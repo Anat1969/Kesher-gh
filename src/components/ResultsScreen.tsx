@@ -14,6 +14,7 @@ import Glyph from './Glyph';
 import Rich from './Rich';
 import { markLead } from '../lib/marker';
 import { CompetitionCard } from './Competition';
+import StoryCard from './StoryCard';
 import LearningChart from './LearningChart';
 import { VerdictLine } from './VoiceNote';
 import { compareMeaning } from '../lib/compare';
@@ -162,6 +163,8 @@ export default function ResultsScreen({
         })}
       </ol>
       </>)}
+
+      {directConns.length > 0 && <StoryCard path={path} directConns={directConns} />}
 
       {directConns.length > 0 && <CompetitionCard mode={daily ? 'daily' : 'classic'} />}
 

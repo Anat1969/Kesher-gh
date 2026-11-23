@@ -4,15 +4,15 @@ import { useGame } from '../context/GameContext';
 import { JoinForm, Leaderboard } from '../components/Competition';
 import Rich from '../components/Rich';
 import { dailyFor } from '../game/daily';
-import { sonResults } from '../game/sons';
+import { sonResults, STANDING } from '../game/sons';
+import { DECK_MODES, type DeckMode } from '../game/deck';
 import { LEVEL_NAMES, LEVEL_ORDER, levelColor } from '../game/gameItems';
-import type { Mode } from '../lib/remote';
 
 const EASE = [0.4, 0, 0.2, 1] as const;
 
 export default function Board() {
-  const { player } = useGame();
-  const [tab, setTab] = useState<Mode>('classic');
+  const { player, settings } = useGame();
+  const [tab, setTab] = useState<DeckMode | 'daily'>(settings.deck);
   const [renaming, setRenaming] = useState(false);
   const daily = dailyFor();
   const sons = sonResults();
@@ -44,21 +44,25 @@ export default function Board() {
             </p>
           )}
 
-          <div role="tablist" aria-label="סוג הטבלה" className="mb-2 grid grid-cols-2 border border-border">
-            {([['classic', 'כל הזמנים'], ['daily', `האתגר של היום · #${daily.number}`]] as const).map(([m, label]) => (
+          <div role="tablist" aria-label="סוג הטבלה" className="mb-2 grid grid-cols-4 gap-1">
+            {([...DECK_MODES.map(m => [m.id, m.label] as const), ['daily', `היום #${daily.number}`] as const]).map(([m, label]) => (
               <button
                 key={m}
                 role="tab"
                 aria-selected={tab === m}
                 onClick={() => setTab(m)}
-                className={`h-11 text-sm transition-colors ${tab === m ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`btn h-11 text-sm ${tab === m ? 'btn-primary' : 'btn-ghost'}`}
               >
                 {label}
               </button>
             ))}
           </div>
-          <p className="label-mono mb-3">{tab === 'classic' ? 'משחק רגיל של 5 דקות · שיא אישי לכל משתתף · הבנים בקו מקווקו' : `מקסימום אפשרי היום: ${daily.best}`}</p>
-          <div role="tabpanel"><Leaderboard mode={tab} /></div>
+          <p className="label-mono mb-3">
+            {tab === 'daily'
+              ? `האתגר של היום · מקסימום אפשרי: ${daily.best}`
+              : `לוח ${DECK_MODES.find(m => m.id === tab)?.label} · שיא אישי לכל משתתף · הבנים בקו מקווקו${tab === 'mix' ? ' (ממוצע על ארבעה לוחות)' : ''}`}
+          </p>
+          <div role="tabpanel"><Leaderboard mode={tab === 'daily' ? 'daily' : 'classic'} board={tab === 'daily' ? 'classic' : tab} /></div>
         </motion.section>
 
         <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1, duration: 0.8, ease: EASE }} className="border-t border-foreground/80 pt-5">
@@ -77,6 +81,9 @@ export default function Board() {
                   </h3>
                   <span className="display-num text-4xl" dir="ltr">{s.best}</span>
                 </div>
+                <p className="label-mono mt-1">
+                  {DECK_MODES.map(m => `${m.label} ${STANDING[m.id][i]}`).join(' · ')}
+                </p>
                 <blockquote className="mt-3 border-r-2 border-foreground/20 pr-3 text-base font-light">
                   "{s.asks}" <span className="label-mono">· {s.source}</span>
                 </blockquote>

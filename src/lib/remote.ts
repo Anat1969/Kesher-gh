@@ -1,6 +1,6 @@
 /**
- * Shared scoreboard. The database is reached only through three functions (kesher_submit,
- * kesher_leaderboard, kesher_history); tables are closed to the public key. Every call fails
+ * Shared scoreboard. The database is reached only through three functions (kesher_submit_v2,
+ * kesher_leaderboard_v2, kesher_history); tables are closed to the public key. Every call fails
  * soft: offline, blocked or slow networks return null and the game keeps working locally.
  */
 
@@ -27,6 +27,8 @@ export interface Submission {
   connections: number;
   /** Share of connections at drash or sod, 0..1. */
   deep: number;
+  /** Which board a classic game was played on (each has its own table). */
+  board?: 'classic' | 'mix' | 'new';
 }
 
 export interface BoardRow {
@@ -92,17 +94,18 @@ async function rpc<T>(fn: string, body: Record<string, unknown>): Promise<T | nu
 
 /** Sends one finished game. Returns the player's best and rank on that board. */
 export function submitScore(player: Player, s: Submission) {
-  return rpc<{ best: number; rank: number }>('kesher_submit', {
+  return rpc<{ best: number; rank: number }>('kesher_submit_v2', {
     p_player: player.id, p_key: player.key, p_name: player.name,
     p_mode: s.mode, p_day: s.mode === 'daily' ? s.day : null,
     p_score: Math.max(0, Math.round(s.score)), p_connections: s.connections,
     p_deep: Math.round(Math.min(1, Math.max(0, s.deep)) * 1000) / 1000,
+    p_board: s.board ?? 'classic',
   });
 }
 
 /** Each player's best score: all time for classic, or for one day of the daily challenge. */
-export async function fetchBoard(mode: Mode, day: string | null = null, limit = 20): Promise<BoardRow[] | null> {
-  const rows = await rpc<BoardRow[]>('kesher_leaderboard', { p_mode: mode, p_day: mode === 'daily' ? day : null, p_limit: limit });
+export async function fetchBoard(mode: Mode, day: string | null = null, limit = 20, board: 'classic' | 'mix' | 'new' = 'classic'): Promise<BoardRow[] | null> {
+  const rows = await rpc<BoardRow[]>('kesher_leaderboard_v2', { p_mode: mode, p_day: mode === 'daily' ? day : null, p_board: board, p_limit: limit });
   return Array.isArray(rows) ? rows.map(r => ({ ...r, rank: Number(r.rank), games: Number(r.games) })) : null;
 }
 
@@ -159,4 +162,29 @@ export async function fetchHistory(p: Pick<Player, 'id' | 'key'>): Promise<Remot
 /** Makes this device play as an existing player. */
 export function adoptPlayer(p: Player): void {
   try { localStorage.setItem(PLAYER_KEY, JSON.stringify(p)); } catch { /* private mode */ }
+}
+
+// ── The literary rewrite of a chain's story ──
+
+export interface LiteraryStory { title: string; paragraphs: string[]; closing: string; by: string }
+
+/** Asks the story function to retell the chain from its facts only. Null when offline or refused. */
+export async function fetchLiteraryStory(facts: unknown[]): Promise<LiteraryStory | null> {
+  const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), 40000) : null;
+  try {
+    const res = await fetch('https://ktqmwpbzcnzkhjskqisy.supabase.co/functions/v1/kesher-story', {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ facts }),
+      signal: ctrl?.signal,
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    return Array.isArray(j?.paragraphs) && j.paragraphs.length ? j as LiteraryStory : null;
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
