@@ -111,6 +111,10 @@
   the relation families, the sons' standing scores, a random bridge pair to guess, documented secrets). "יצירת
   כתבה" builds a new sheet from a random pair's readings. Each sheet prints alone (A4, `data-print-sheet`).
   Quotes only from sources whose wording is certain.
+- Design language file (24.11.2026, "קובץ אפיון של השפה העיצובית כדי שאוכל לצרף אותו לאפליקציה אחרת"):
+  `docs/design-language.md` is the portable spec of this app's design language (two layers, tokens, type,
+  components, glyphs, motion, adoption checklist, ready CSS/Tailwind/Rich/Glyph). When the language changes
+  here (tokens in `src/index.css`, `.btn`, Glyph), update that file in the same commit.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)
