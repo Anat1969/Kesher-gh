@@ -9,6 +9,7 @@ const NAV = [
   { to: '/guide', label: 'מדריך', short: 'מדריך', end: false },
   { to: '/secrets', label: 'אוסף הסודות', short: 'סודות', end: false },
   { to: '/did-you-know', label: 'הידעת', short: 'הידעת', end: false },
+  { to: '/articles', label: 'כתבות', short: 'כתבות', end: false },
   { to: '/scores', label: 'הלמידה שלי', short: 'למידה', end: false },
   { to: '/board', label: 'טבלה', short: 'טבלה', end: false },
 ] as const;
@@ -42,7 +43,7 @@ export default function TopBar() {
           <AIMenu settings={settings} onSettings={updateSettings} />
         </div>
 
-        <nav aria-label="ניווט ראשי" className="md:hidden -mt-1 flex h-10 items-stretch gap-0.5 -mx-2">
+        <nav aria-label="ניווט ראשי" className="scrollbar-none md:hidden -mt-1 flex h-10 items-stretch gap-0.5 -mx-2 overflow-x-auto">
           {NAV.map(n => <NavItem key={n.to} {...n} group="mobile" />)}
         </nav>
       </div>
