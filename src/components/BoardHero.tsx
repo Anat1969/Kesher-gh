@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ITEMS, LEVEL_NAMES, levelColor } from '../game/gameItems';
+import { CLASSIC_DECK, ITEMS, LEVEL_NAMES, levelColor } from '../game/gameItems';
 import { evaluate } from '../game/evaluator';
 import Glyph from './Glyph';
 
@@ -75,7 +75,7 @@ export default function BoardHero() {
             );
           })}
 
-          {ITEMS.map((item, i) => {
+          {CLASSIC_DECK.map(i => ({ item: ITEMS[i], i })).map(({ item, i }) => {
             const p = pos(i);
             const on = reached.has(i);
             return (

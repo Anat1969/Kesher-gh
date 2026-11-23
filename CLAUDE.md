@@ -86,6 +86,13 @@
   the deeper the level, with chain bonus beneath; the HUD score flashes the level colour with "+N".
 - Navigation (2026-10-28): the current page is always visibly marked (weight, 2px bar, grey fill on
   desktop; separate layoutIds per nav). The gold-on-ink logo (`src/components/Logo.tsx`) sits by the name.
+- Card pool (23.11.2026, "תאפשר עוד ציורים, מושגים, כדי לגוון"): 50 cards; a board is 25 (`BOARD_SIZE`).
+  Cards 25–49 add concepts (חלום, אינסוף, זיכרון, שתיקה, חופש, מילה, אפס), the body (עין, לב) and the built
+  world (מבוך, גשר, מגדלור, בית), each with a full lexicon entry, a gold drawing (`src/components/glyphPaths.ts`)
+  and checked secrets. `src/game/deck.ts` deals the board; the home page chooses "מתחלף" (default, 25 of 50),
+  "קלאסי" or "חדש". Daily boards are dealt from the pool from 2026-11-24 (`MIXED_FROM`); earlier days keep the
+  classic board. The four sons always play the classic board. A new card needs: ITEMS entry, LEXICON entry with a
+  note for every tag, a drawing, and passes `src/game/__tests__/pool.test.ts`.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LEVEL_NAMES, LEVEL_ORDER, SCORE_VALUES, levelColor, CHAIN_RATIO } from '../game/gameItems';
+import { ITEMS, LEVEL_NAMES, LEVEL_ORDER, SCORE_VALUES, levelColor, CHAIN_RATIO } from '../game/gameItems';
+import { DECK_MODES } from '../game/deck';
+import { useGame } from '../context/GameContext';
 import { GAME_DURATION, TOTAL_CARDS } from '../game/engine';
 import { SECRET_KEYS } from '../game/evaluator';
 import type { DailyResult, Stats } from '../lib/storage';
@@ -50,7 +52,11 @@ export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: 
             שרשרת אחת של {TOTAL_CARDS} מילים. <mark className="hl">כל חיבור נמדד בעומקו</mark>, מהגלוי ועד הנסתר.
           </motion.p>
 
-          <motion.div {...fade(0.24)} className="mt-10 flex flex-wrap items-center gap-3">
+          <motion.div {...fade(0.2)} className="mt-9 max-w-[460px]">
+            <DeckChooser />
+          </motion.div>
+
+          <motion.div {...fade(0.24)} className="mt-5 flex flex-wrap items-center gap-3">
             <button onClick={onStart} className="btn btn-primary h-12 px-9 text-base">
               {played ? 'משחק חדש' : 'התחלת משחק'}
             </button>
@@ -58,7 +64,7 @@ export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: 
           </motion.div>
           <motion.p {...fade(0.28)} className="mt-5 max-w-[460px] border-r-2 border-foreground/70 pr-3 text-[0.95rem] font-light">
             <span className="label-mono">חדש · </span>
-            אחרי כל קשר, <mark className="hl">הסבירו אותו בקול</mark>. התמלול מופיע ליד הקריאה שלי, ובסוף המשחק נראה איפה חשבתם אחרת.
+            <mark className="hl">{ITEMS.length} מילים במאגר</mark>, עם מושגים חדשים, ולוח אחר בכל משחק. ואחרי כל קשר: הסבירו אותו בקול.
           </motion.p>
 
           <motion.dl {...fade(0.32)} className="mt-12 grid max-w-[460px] grid-cols-3 border-t border-border pt-4">
@@ -69,7 +75,7 @@ export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: 
                   { label: 'סודות', value: `${stats.secrets.length}/${SECRET_KEYS.length}` },
                 ]
               : [
-                  { label: 'מילים', value: TOTAL_CARDS },
+                  { label: 'מילים במאגר', value: ITEMS.length },
                   { label: 'דקות', value: GAME_DURATION / 60 },
                   { label: 'סודות', value: SECRET_KEYS.length },
                 ]
@@ -182,6 +188,35 @@ function ChainDiagram() {
           </g>
         ))}
       </svg>
+    </div>
+  );
+}
+
+/** Which board the next game is dealt from: changing every game, the classic 25, or the new 25. */
+function DeckChooser() {
+  const { settings, updateSettings } = useGame();
+  const current = DECK_MODES.find(m => m.id === settings.deck) ?? DECK_MODES[0];
+  return (
+    <div>
+      <p className="label-mono mb-2">לוח</p>
+      <div role="radiogroup" aria-label="בחירת לוח" className="grid grid-cols-3 gap-1.5">
+        {DECK_MODES.map(m => {
+          const on = m.id === current.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => updateSettings({ deck: m.id })}
+              className={`btn h-11 text-[0.95rem] ${on ? 'btn-primary' : 'btn-ghost'}`}
+            >
+              {m.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-sm text-muted-foreground">{current.hint}</p>
     </div>
   );
 }

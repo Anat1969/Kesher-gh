@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import App from '../../App';
 
 describe('App', () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => { localStorage.clear(); localStorage.setItem('kesher:settings:v1', JSON.stringify({ deck: 'classic' })); });
 
   it('plays a connection end-to-end, stops the clock and finishes', async () => {
     render(<App />);
