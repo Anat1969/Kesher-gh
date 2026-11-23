@@ -104,6 +104,13 @@
   `kesher_submit_v2` / `kesher_leaderboard_v2` (v1 kept for installed old versions). `/board` has tabs
   מתחלף / קלאסי / חדש / היום. The sons' standing scores per board live in `STANDING` (sons.ts) for speed,
   and `sons.test` recomputes all three and fails on any difference ("computed, never typed").
+- Articles (23.11.2026, "נסח כתבות ... בהתאם לתובנה על כוחו של משחק זה"): `/articles` ("כתבות" in the top bar),
+  six A4 sheets in the drawing-set format (`src/components/ArticleSheet.tsx`: hairline frame, figure in the game's
+  glyphs, quote with source, sentence-per-line body, three closing lines, a title block as on an architect's sheet),
+  filtered by הסבר / סוגי קשרים / קשרים יצירתיים. Figures are live from the game data (the four floors of שמש ואש,
+  the relation families, the sons' standing scores, a random bridge pair to guess, documented secrets). "יצירת
+  כתבה" builds a new sheet from a random pair's readings. Each sheet prints alone (A4, `data-print-sheet`).
+  Quotes only from sources whose wording is certain.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)

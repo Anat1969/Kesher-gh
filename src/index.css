@@ -265,3 +265,32 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Articles: each one a sheet from a drawing set, A4 in proportion on wide screens. */
+.article-sheet {
+  background: hsl(var(--surface-1));
+  box-shadow: var(--shadow-md);
+  padding: 10px;
+}
+@media (min-width: 768px) {
+  .article-sheet { aspect-ratio: 210 / 297; }
+}
+@media print {
+  @page { size: A4; margin: 10mm; }
+  header.fixed, .no-print, ai-menu { display: none !important; }
+  body { background: #fff !important; }
+  body > div, #root > div { padding-top: 0 !important; }
+  .article-sheet { box-shadow: none; aspect-ratio: auto; height: 277mm; break-after: page; padding: 0; }
+  body[data-print-sheet="1"] .article-sheet:not([data-sheet="1"]) { display: none; }
+  body[data-print-sheet="2"] .article-sheet:not([data-sheet="2"]) { display: none; }
+  body[data-print-sheet="3"] .article-sheet:not([data-sheet="3"]) { display: none; }
+  body[data-print-sheet="4"] .article-sheet:not([data-sheet="4"]) { display: none; }
+  body[data-print-sheet="5"] .article-sheet:not([data-sheet="5"]) { display: none; }
+  body[data-print-sheet="6"] .article-sheet:not([data-sheet="6"]) { display: none; }
+  body[data-print-sheet="7"] .article-sheet:not([data-sheet="7"]) { display: none; }
+  body[data-print-sheet="8"] .article-sheet:not([data-sheet="8"]) { display: none; }
+  body[data-print-sheet="9"] .article-sheet:not([data-sheet="9"]) { display: none; }
+  body[data-print-sheet="10"] .article-sheet:not([data-sheet="10"]) { display: none; }
+  body[data-print-sheet="11"] .article-sheet:not([data-sheet="11"]) { display: none; }
+  body[data-print-sheet="12"] .article-sheet:not([data-sheet="12"]) { display: none; }
+}
