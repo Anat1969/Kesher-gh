@@ -119,6 +119,9 @@
   emits `version.json` (uncached); `UpdateNotice` compares it with `__BUILD__` on open and on every return to
   the app, and when the page is older it unregisters the service worker, clears caches and reloads once.
   New pages also get an entry on the home page (the articles card), not only a nav item.
+  Root cause found the same day on a desktop browser: the service worker answered navigations from the
+  precached index.html. Navigations are now NetworkFirst (cache only offline, precached index.html as the
+  last fallback; `vite.config.ts`), so a plain reload always shows the live build.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)

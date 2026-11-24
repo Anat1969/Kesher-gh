@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -6,6 +6,15 @@ import { VitePWA } from "vite-plugin-pwa";
 
 /** One build stamp for the bundle and for version.json, so an open app can tell it is old. */
 const BUILD = new Date().toISOString();
+
+/** Writes version.json next to the build, never cached, so an open page can tell it is old. */
+const versionFile: Plugin = {
+  name: "kesher-version-file",
+  apply: "build",
+  generateBundle() {
+    this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ build: BUILD }) });
+  },
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -21,13 +30,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    {
-      name: "kesher-version-file",
-      apply: "build" as const,
-      generateBundle() {
-        this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ build: BUILD }) });
-      },
-    },
+    versionFile,
     mode === "development" && componentTagger(),
     VitePWA({
       // The app registers the worker itself (src/components/UpdateNotice.tsx): it checks for a new
@@ -56,9 +59,22 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
         globIgnores: ["**/og-image.png"],
-        navigateFallback: "/index.html",
+        // Pages are never served from the cache while online (24.11.2026: a desktop browser kept showing an
+        // old build). Navigations go to the network first; the cached page is used only offline, and the
+        // precached index.html is the last fallback.
+        navigateFallback: null,
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pages",
+              networkTimeoutSeconds: 4,
+              expiration: { maxEntries: 20 },
+              precacheFallback: { fallbackURL: "/index.html" },
+            },
+          },
           {
             // Google Fonts stylesheets and font files — cache so the game works offline.
             urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
