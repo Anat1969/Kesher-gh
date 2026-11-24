@@ -58,7 +58,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        globIgnores: ["**/og-image.png"],
+        globIgnores: ["**/og-image.png", "**/jspdf*", "**/html2canvas*", "**/purify*", "**/index.es-*"],
         // Pages are never served from the cache while online (24.11.2026: a desktop browser kept showing an
         // old build). Navigations go to the network first; the cached page is used only offline, and the
         // precached index.html is the last fallback.

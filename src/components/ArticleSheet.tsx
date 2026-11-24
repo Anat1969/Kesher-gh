@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import Rich from './Rich';
 import { TOPICS, type ArticleTopic } from '../lib/articleTopics';
+import { fitSheet } from '../lib/sheetFit';
 
 export interface ArticleProps {
   no: number;
@@ -29,8 +30,44 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
  */
 export default function ArticleSheet(p: ArticleProps) {
   const topic = TOPICS.find(t => t.id === p.topic)!;
+  const ref = useRef<HTMLElement>(null);
+  const [saving, setSaving] = useState<'idle' | 'busy' | 'error'>('idle');
+
+  // Fit the content inside the A4 frame: on first paint, when the window changes, and for print.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => fitSheet(el);
+    fit();
+    document.fonts?.ready.then(fit);
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    const media = window.matchMedia('print');
+    media.addEventListener('change', fit);
+    window.addEventListener('beforeprint', fit);
+    window.addEventListener('afterprint', fit);
+    return () => {
+      ro.disconnect();
+      media.removeEventListener('change', fit);
+      window.removeEventListener('beforeprint', fit);
+      window.removeEventListener('afterprint', fit);
+    };
+  }, [p.title, p.body]);
+
+  const download = async () => {
+    if (!ref.current || saving === 'busy') return;
+    setSaving('busy');
+    try {
+      const { downloadSheet } = await import('../lib/sheetPdf');
+      await downloadSheet(ref.current, `kesher-${pad2(p.no)}.pdf`);
+      setSaving('idle');
+    } catch {
+      setSaving('error');
+    }
+  };
+
   return (
-    <article className="article-sheet" data-sheet={p.no} aria-label={p.title}>
+    <article ref={ref} className="article-sheet" data-sheet={p.no} aria-label={p.title}>
       <div className="flex h-full flex-col border border-foreground/70 p-5 sm:p-8">
         <header className="flex items-baseline justify-between gap-4 border-b border-foreground/70 pb-3">
           <p className="label-mono">{topic.label} · גיליון <span className="num-mono">{pad2(p.no)}</span></p>
@@ -73,8 +110,12 @@ export default function ArticleSheet(p: ArticleProps) {
               <dd className="num-mono px-2 py-1" dir="ltr" style={{ textAlign: 'right' }}>{pad2(p.no)}/{pad2(p.of)}</dd>
             </dl>
           </div>
-          <div className="no-print mt-4 flex gap-2">
-            <button type="button" onClick={p.onPrint} className="btn btn-ghost h-10 px-4 text-sm">הדפסה או שמירה כ-PDF</button>
+          <div className="no-print mt-4 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={download} disabled={saving === 'busy'} className="btn btn-primary h-10 px-5 text-sm disabled:opacity-60">
+              {saving === 'busy' ? 'מכין קובץ…' : 'הורדה כ-PDF'}
+            </button>
+            <button type="button" onClick={p.onPrint} className="btn btn-ghost h-10 px-4 text-sm">הדפסה</button>
+            {saving === 'error' && <span className="label-mono">ההורדה נכשלה. אפשר להדפיס ולבחור "שמירה כ-PDF".</span>}
           </div>
         </div>
       </div>

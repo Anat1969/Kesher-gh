@@ -122,6 +122,10 @@
   Root cause found the same day on a desktop browser: the service worker answered navigations from the
   precached index.html. Navigations are now NetworkFirst (cache only offline, precached index.html as the
   last fallback; `vite.config.ts`), so a plain reload always shows the live build.
+- Articles are A4, inside the frame, never cut (24.11.2026, "כל מאמר נכנס לדף A4 בתוך המסגרת ולא נחתך. ומוכן עם כפתור להורדה"):
+  `src/lib/sheetFit.ts` shrinks the content (zoom, 3% steps, down to 70%) until it fits the frame, on paint and for print;
+  "הורדה כ-PDF" (`src/lib/sheetPdf.ts`, html-to-image + jsPDF, loaded only on click, kept out of the precache) saves the sheet
+  as one A4 page drawn by the browser itself, so Hebrew stays right. "הדפסה" stays as the second button.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)
