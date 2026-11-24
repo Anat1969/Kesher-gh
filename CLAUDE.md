@@ -115,6 +115,10 @@
   `docs/design-language.md` is the portable spec of this app's design language (two layers, tokens, type,
   components, glyphs, motion, adoption checklist, ready CSS/Tailwind/Rich/Glyph). When the language changes
   here (tokens in `src/index.css`, `.btn`, Glyph), update that file in the same commit.
+- Never a stale screen (24.11.2026, "אני עדיין לא רואה את הכתבות" while the live site had them): every build
+  emits `version.json` (uncached); `UpdateNotice` compares it with `__BUILD__` on open and on every return to
+  the app, and when the page is older it unregisters the service worker, clears caches and reloads once.
+  New pages also get an entry on the home page (the articles card), not only a nav item.
 - Grids that hold long text need `grid-cols-[minmax(0,1fr)]`, or mobile scrolls sideways.
 
 ## תעודת DNA (03.11.2026)

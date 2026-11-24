@@ -4,10 +4,13 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+/** One build stamp for the bundle and for version.json, so an open app can tell it is old. */
+const BUILD = new Date().toISOString();
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   define: {
-    __BUILD__: JSON.stringify(new Date().toISOString()),
+    __BUILD__: JSON.stringify(BUILD),
   },
   server: {
     host: "::",
@@ -18,6 +21,13 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    {
+      name: "kesher-version-file",
+      apply: "build" as const,
+      generateBundle() {
+        this.emitFile({ type: "asset", fileName: "version.json", source: JSON.stringify({ build: BUILD }) });
+      },
+    },
     mode === "development" && componentTagger(),
     VitePWA({
       // The app registers the worker itself (src/components/UpdateNotice.tsx): it checks for a new
