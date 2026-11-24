@@ -64,6 +64,9 @@ export default defineConfig(({ mode }) => ({
         // precached index.html is the last fallback.
         navigateFallback: null,
         cleanupOutdatedCaches: true,
+        // A new version takes over at once, even while a tab is open; the page then reloads into it.
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === "navigate",

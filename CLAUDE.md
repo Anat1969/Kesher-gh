@@ -122,6 +122,9 @@
   Root cause found the same day on a desktop browser: the service worker answered navigations from the
   precached index.html. Navigations are now NetworkFirst (cache only offline, precached index.html as the
   last fallback; `vite.config.ts`), so a plain reload always shows the live build.
+  Second root cause (24.11.2026, "לא ייתכן שאני צריכה ללחוץ Ctrl Shift R"): the new service worker stayed *waiting* while
+  any Kesher tab was open, so the old one kept serving the old page. Now `skipWaiting` + `clientsClaim`: the new version takes
+  over at once and the open page reloads into it (reproduced with an old build and a switched server: about 5 seconds, no hard reload).
 - Articles are A4, inside the frame, never cut (24.11.2026, "כל מאמר נכנס לדף A4 בתוך המסגרת ולא נחתך. ומוכן עם כפתור להורדה"):
   `src/lib/sheetFit.ts` shrinks the content (zoom, 3% steps, down to 70%) until it fits the frame, on paint and for print;
   "הורדה כ-PDF" (`src/lib/sheetPdf.ts`, html-to-image + jsPDF, loaded only on click, kept out of the precache) saves the sheet
