@@ -64,7 +64,7 @@ export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: 
           </motion.div>
           <motion.p {...fade(0.28)} className="mt-5 max-w-[460px] border-r-2 border-foreground/70 pr-3 text-[0.95rem] font-light">
             <span className="label-mono">חדש · </span>
-            <mark className="hl">{ITEMS.length} מילים במאגר</mark>, עם מושגים חדשים, ולוח אחר בכל משחק. ואחרי כל קשר: הסבירו אותו בקול.
+            <mark className="hl">{ITEMS.length} מילים במאגר</mark>, לוח אחר בכל משחק, ו<Link to="/articles" className="link-draw font-normal text-foreground">שש כתבות על כוחו של קשר</Link>.
           </motion.p>
 
           <motion.dl {...fade(0.32)} className="mt-12 grid max-w-[460px] grid-cols-3 border-t border-border pt-4">
@@ -94,6 +94,8 @@ export default function SplashScreen({ stats, onStart, onDaily, dailyResults }: 
       </section>
 
       <DailyCard results={dailyResults} onStart={onDaily} />
+
+      <ArticlesCard />
 
       {/* The four depths, as a table of contents */}
       <section aria-labelledby="depth-title" className="mt-24 md:mt-32">
@@ -218,5 +220,42 @@ function DeckChooser() {
       </div>
       <p className="mt-2 text-sm text-muted-foreground">{current.hint}</p>
     </div>
+  );
+}
+
+/** The way into the articles from the home page, as a strip of sheets from the drawing set. */
+function ArticlesCard() {
+  const sheets: { title: string; topic: string; glyphs: [string, string] }[] = [
+    { title: 'לחבר שתי מילים זה לחשוב', topic: 'הסבר', glyphs: ['נבט', 'ברק'] },
+    { title: 'ארבע קומות של קריאה', topic: 'סוגי קשרים', glyphs: ['שמש', 'אש'] },
+    { title: 'המילה השלישית', topic: 'קשרים יצירתיים', glyphs: ['גשר', 'מבוך'] },
+  ];
+  const id = (n: string) => ITEMS.findIndex(i => i.l === n);
+  return (
+    <section aria-labelledby="articles-title" className="mt-20 border-t border-foreground/80 pt-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="label-mono">כתבות · שש גיליונות A4</p>
+          <h2 id="articles-title" className="mt-2 text-4xl font-extralight">כוחו של קשר</h2>
+          <p className="mt-2 max-w-[46ch] text-muted-foreground">למה חיבור בין שתי תמונות <mark className="hl">מאמן מחשבה</mark>, אילו סוגי קשרים יש, ואיך נולד קשר יצירתי.</p>
+        </div>
+        <Link to="/articles" className="btn btn-primary h-12 px-8 text-base">לכתבות</Link>
+      </div>
+      <ol className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {sheets.map((s, i) => (
+          <li key={s.title}>
+            <Link to="/articles" className="panel flex h-full flex-col gap-3 p-4 transition-shadow hover:shadow-lg">
+              <span className="label-mono">{s.topic} · גיליון <span className="num-mono">{String(i + 1).padStart(2, '0')}</span></span>
+              <span className="flex items-center gap-2">
+                <Glyph i={id(s.glyphs[0])} size={30} />
+                <span className="h-px w-5 bg-foreground/40" />
+                <Glyph i={id(s.glyphs[1])} size={30} />
+              </span>
+              <span className="text-lg font-light leading-snug">{s.title}</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
